@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		07F471682DAD0A13004E1818 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 07F471672DAD0A13004E1818 /* Alamofire */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		07F470CB2DACF5B9004E1818 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				07F471682DAD0A13004E1818 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = Hyodor;
 			packageProductDependencies = (
+				07F471672DAD0A13004E1818 /* Alamofire */,
 			);
 			productName = Hyodor;
 			productReference = 07F470BB2DACF5B8004E1818 /* Hyodor.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 07F470B22DACF5B8004E1818;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				07F4712D2DAD098C004E1818 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 07F470BC2DACF5B8004E1818 /* Products */;
 			projectDirPath = "";
@@ -560,6 +569,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		07F4712D2DAD098C004E1818 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		07F471672DAD0A13004E1818 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 07F4712D2DAD098C004E1818 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 07F470B32DACF5B8004E1818 /* Project object */;
 }
