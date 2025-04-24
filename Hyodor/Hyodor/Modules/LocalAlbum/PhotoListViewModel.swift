@@ -5,32 +5,14 @@
 //  Created by 김상준 on 4/23/25.
 //
 
-// MARK: - 뷰모델
 import SwiftUI
 import Photos
 
 class PhotoListViewModel: ObservableObject {
     // 서비스
     private let uploadService: GalleryUploadServiceProtocol
-    // 업로드된 사진 관리자
     private let uploadedPhotoManager = UploadedPhotoManager()
 
-    // 저장된 업로드 정보 로드
-    private func loadUploadedPhotos() {
-        _ = uploadedPhotoManager.getAllUploadedPhotos()
-
-        // 사진첩에서 가져온 에셋과 저장된 업로드 정보 매칭
-        for (index, asset) in photoAssets.enumerated() {
-            if uploadedPhotoManager.isPhotoUploaded(assetId: asset.id) {
-                photoAssets[index].isUploaded = true
-            }
-        }
-    }
-    var hasSelectedPhotos: Bool {
-           return photoAssets.contains(where: { $0.isSelected })
-       }
-
-    // 상태
     @Published var photoAssets: [PhotoAssetModel] = []
     @Published var isUploading = false
     @Published var showingPermissionAlert = false
@@ -38,13 +20,14 @@ class PhotoListViewModel: ObservableObject {
     @Published var showingUploadSuccess = false
     @Published var uploadSuccessCount = 0
 
-    // 사용자 ID (실제 앱에서는 인증 시스템에서 가져와야 함)
     private let userId = "user123"
 
-    // 초기화
     init(uploadService: GalleryUploadServiceProtocol = GalleryUploadService()) {
         self.uploadService = uploadService
-        loadUploadedPhotos()
+    }
+
+    var hasSelectedPhotos: Bool {
+        photoAssets.contains(where: { $0.isSelected })
     }
 
     // MARK: - 사진첩 접근 권한 요청
@@ -53,10 +36,8 @@ class PhotoListViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch status {
                 case .authorized, .limited:
-                    print("사진첩 접근 권한 획득")
                     self?.fetchPhotos()
                 case .denied, .restricted:
-                    print("사진첩 접근 권한 거부됨")
                     self?.showingPermissionAlert = true
                 default:
                     break
@@ -73,235 +54,123 @@ class PhotoListViewModel: ObservableObject {
 
         var assets: [PhotoAssetModel] = []
         fetchResult.enumerateObjects { asset, _, _ in
-            // 업로드 상태 확인
             let isUploaded = self.uploadedPhotoManager.isPhotoUploaded(assetId: asset.localIdentifier)
             assets.append(PhotoAssetModel(asset: asset, isSelected: false, isUploaded: isUploaded))
         }
-        // 메인 스레드에서 UI 업데이트
         DispatchQueue.main.async {
             self.photoAssets = assets
-            print("가져온 사진 수: \(assets.count)")
         }
     }
 
-    // 사진 탭 처리
+    // MARK: - 사진 탭 처리
     func handleTap(assetId: String) {
         guard let index = photoAssets.firstIndex(where: { $0.id == assetId }) else { return }
-
-        // 업로드된 사진인지 확인
         if photoAssets[index].isUploaded || uploadedPhotoManager.isPhotoUploaded(assetId: assetId) {
-            showingDuplicateAlert = true // 이미 업로드된 경우 알림
+            showingDuplicateAlert = true
         } else {
-            // 선택 상태 토글
             photoAssets[index].isSelected.toggle()
         }
     }
-        // 업로드 처리 (콜백 추가)
-        func uploadSelectedPhotos(completion: ((UploadCompleteResponse) -> Void)? = nil) {
-            guard hasSelectedPhotos, !isUploading else { return }
-            isUploading = true
 
-            // 사용자 ID (실제 앱에서는 인증 시스템에서 가져와야 함)
-            let userId = "user123"
+    // MARK: - 업로드 처리 (async/await)
+    @MainActor
+    func uploadSelectedPhotos(onComplete: ((UploadCompleteResponse) -> Void)? = nil) async {
+        guard hasSelectedPhotos, !isUploading else { return }
+        isUploading = true
 
-            // 1. 선택된 에셋들을 UIImage로 변환
-            let selectedAssetArray = photoAssets.filter { $0.isSelected }
+        // 1. 선택된 에셋
+        let selectedAssetModels = photoAssets.filter { $0.isSelected }
+        let selectedAssets = selectedAssetModels.map { $0.asset }
 
-            // 이미지와 파일명 준비
-            var images: [UIImage] = []
-            var imageInfos: [[String: String]] = []
-            let group = DispatchGroup()
+        // 2. 이미지 변환 (비동기)
+        var images: [UIImage] = []
+        var imageInfos: [[String: String]] = []
 
-            for asset in selectedAssetArray.map({ $0.asset }) {
-                group.enter()
-
-                let options = PHImageRequestOptions()
-                options.isSynchronous = false
-                options.deliveryMode = .highQualityFormat
-                options.isNetworkAccessAllowed = true
-
-                PHImageManager.default().requestImage(
-                    for: asset,
-                    targetSize: PHImageManagerMaximumSize,
-                    contentMode: .aspectFit,
-                    options: options
-                ) { [weak self] image, info in
-                    defer { group.leave() }
-
-                    guard let self = self, let image = image else { return }
-
-                    images.append(image)
-
-                    // 파일명 생성
-                    let id = asset.localIdentifier.components(separatedBy: "/").first ?? "img"
-                    let timestamp = Int(Date().timeIntervalSince1970)
-                    let fileExtension = self.getImageFileExtension(from: asset)
-                    let fileName = "\(id)_\(timestamp).\(fileExtension)"
-
-                    // MIME 타입 결정
-                    let contentType = fileExtension == "png" ? "image/png" : "image/jpeg"
-
-                    // 이미지 정보 추가
-                    imageInfos.append([
-                        "fileName": fileName,
-                        "contentType": contentType
-                    ])
-                }
-            }
-
-            group.notify(queue: .main) { [weak self] in
-                guard let self = self else { return }
-
-                // 2. Presigned URL 요청
-                self.uploadService.requestPresignedURLs(imageInfos: imageInfos) { [weak self] result in
-                    guard let self = self else { return }
-
-                    switch result {
-                    case .success(let presignedURLs):
-                        print("Presigned URL 발급 성공: \(presignedURLs.count)개")
-
-                        // 3. S3에 이미지 업로드
-                        self.uploadImagesToS3(
-                            images: images,
-                            presignedURLs: presignedURLs,
-                            selectedAssets: selectedAssetArray.map({ $0.asset }),
-                            completion: completion
-                        )
-
-                    case .failure(let error):
-                        DispatchQueue.main.async {
-                            print("Presigned URL 발급 실패: \(error.localizedDescription)")
-                            self.isUploading = false
-                            // 에러 처리 추가
-                        }
-                    }
-                }
+        for asset in selectedAssets {
+            if let image = await requestUIImage(from: asset) {
+                images.append(image)
+                let id = asset.localIdentifier.components(separatedBy: "/").first ?? "img"
+                let timestamp = Int(Date().timeIntervalSince1970)
+                let fileExtension = getImageFileExtension(from: asset)
+                let fileName = "\(id)_\(timestamp).\(fileExtension)"
+                let contentType = fileExtension == "png" ? "image/png" : "image/jpeg"
+                imageInfos.append([
+                    "fileName": fileName,
+                    "contentType": contentType
+                ])
             }
         }
 
-        // S3에 이미지 업로드 (콜백 추가)
-        private func uploadImagesToS3(
-            images: [UIImage],
-            presignedURLs: [PresignedURLResponse],
-            selectedAssets: [PHAsset],
-            completion: ((UploadCompleteResponse) -> Void)? = nil
-        ) {
-            let uploadGroup = DispatchGroup()
-            var successfulUploads: [UploadCompleteRequest.UploadedPhotoInfo] = []
+        do {
+            // 3. Presigned URL 요청
+            let presignedURLs = try await uploadService.requestPresignedURLs(imageInfos: imageInfos)
 
-            for (index, presignedURL) in presignedURLs.enumerated() {
-                guard index < images.count else { continue }
-
-                uploadGroup.enter()
-                uploadService.uploadImageToS3(image: images[index], presignedURL: presignedURL) { [weak self] success in
-                    guard let self = self else { return }
-
-                    if success {
-                        // ISO 8601 형식의 현재 시간
-                        let dateFormatter = ISO8601DateFormatter()
-                        let uploadTime = dateFormatter.string(from: Date())
-
-                        // 성공한 업로드 정보 저장
-                        let uploadInfo = UploadCompleteRequest.UploadedPhotoInfo(
-                            photoId: presignedURL.photoId,
-                            photoUrl: presignedURL.photoUrl,
-                            uploadAt: uploadTime
-                        )
-
-                        DispatchQueue.main.async {
-                            successfulUploads.append(uploadInfo)
-                        }
-                    }
-                    uploadGroup.leave()
-                }
+            // 4. S3 업로드
+            for (index, presignedURL) in presignedURLs.enumerated() where index < images.count {
+                try await uploadService.uploadImageToS3(image: images[index], presignedURL: presignedURL)
             }
 
-            uploadGroup.notify(queue: .main) { [weak self] in
-                guard let self = self else { return }
+            // 5. 업로드 완료 알림
+            let now = ISO8601DateFormatter().string(from: Date())
+            let uploadedInfos = presignedURLs.enumerated().map { (index, presignedURL) in
+                UploadCompleteRequest.UploadedPhotoInfo(
+                    photoId: presignedURL.photoId,
+                    photoUrl: presignedURL.photoUrl,
+                    uploadAt: now
+                )
+            }
+            let response = try await uploadService.notifyUploadComplete(userId: userId, uploadedPhotos: uploadedInfos)
 
-                // 4. 업로드 완료 알림
-                if !successfulUploads.isEmpty {
-                    self.notifyUploadComplete(
-                        successfulUploads: successfulUploads,
-                        presignedURLs: presignedURLs,
-                        selectedAssets: selectedAssets,
-                        completion: completion
+            // 6. 상태/로컬 정보 갱신
+            let uploadedPhotoIds = Set(response.newPhoto.map { $0.photoId })
+            for (index, asset) in selectedAssets.enumerated() {
+                if index < presignedURLs.count,
+                   uploadedPhotoIds.contains(presignedURLs[index].photoId),
+                   let assetIndex = photoAssets.firstIndex(where: { $0.asset.localIdentifier == asset.localIdentifier }) {
+                    photoAssets[assetIndex].isUploaded = true
+                    photoAssets[assetIndex].isSelected = false
+                    let uploadedPhoto = UploadedLocalPhotoInfo(
+                        id: asset.localIdentifier,
+                        photoId: presignedURLs[index].photoId,
+                        photoUrl: presignedURLs[index].photoUrl,
+                        uploadedAt: Date()
                     )
-                } else {
-                    DispatchQueue.main.async {
-                        print("업로드 실패: 성공적으로 업로드된 이미지 없음")
-                        self.isUploading = false
-                        // 에러 처리 추가
-                    }
+                    uploadedPhotoManager.saveUploadedPhoto(uploadedPhoto)
                 }
             }
+            uploadSuccessCount = uploadedPhotoIds.count
+            isUploading = false
+            showingUploadSuccess = true
+            onComplete?(response)
+        } catch {
+            print("업로드 실패: \(error.localizedDescription)")
+            isUploading = false
+            // 에러 처리 추가
         }
+    }
 
-        // 업로드 완료 알림 (콜백 추가)
-        private func notifyUploadComplete(
-            successfulUploads: [UploadCompleteRequest.UploadedPhotoInfo],
-            presignedURLs: [PresignedURLResponse],
-            selectedAssets: [PHAsset],
-            completion: ((UploadCompleteResponse) -> Void)? = nil
-        ) {
-            uploadService.notifyUploadComplete(userId: userId, uploadedPhotos: successfulUploads) { [weak self] result in
-                guard let self = self else { return }
-
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let response):
-                        print("업로드 완료 알림 성공: \(response.syncedAt)")
-
-                        // 업로드된 에셋 표시 업데이트
-                        let uploadedPhotoIds = Set(response.newPhoto.map { $0.photoId })
-
-                        for (index, asset) in selectedAssets.enumerated() {
-                            if index < presignedURLs.count,
-                               uploadedPhotoIds.contains(presignedURLs[index].photoId),
-                               let assetIndex = self.photoAssets.firstIndex(where: { $0.asset.localIdentifier == asset.localIdentifier }) {
-                                self.photoAssets[assetIndex].isUploaded = true
-                                self.photoAssets[assetIndex].isSelected = false
-                            }
-                        }
-
-                        // 업로드된 사진 정보 저장
-                        for (index, asset) in selectedAssets.enumerated() {
-                            if index < presignedURLs.count,
-                               uploadedPhotoIds.contains(presignedURLs[index].photoId) {
-                                let uploadedPhoto = UploadedPhotoInfo(
-                                    id: asset.localIdentifier,
-                                    photoId: presignedURLs[index].photoId,
-                                    photoUrl: presignedURLs[index].photoUrl,
-                                    uploadedAt: Date()
-                                )
-                                self.uploadedPhotoManager.saveUploadedPhoto(uploadedPhoto)
-                            }
-                        }
-
-                        self.uploadSuccessCount = uploadedPhotoIds.count
-                        self.isUploading = false
-                        self.showingUploadSuccess = true
-
-                        // 콜백 호출
-                        completion?(response)
-
-                    case .failure(let error):
-                        print("업로드 완료 알림 실패: \(error.localizedDescription)")
-                        self.isUploading = false
-                        // 에러 처리 추가
-                    }
-                }
+    // MARK: - PHAsset → UIImage 비동기 변환
+    private func requestUIImage(from asset: PHAsset) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            let options = PHImageRequestOptions()
+            options.isSynchronous = false
+            options.deliveryMode = .highQualityFormat
+            options.isNetworkAccessAllowed = true
+            PHImageManager.default().requestImage(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options
+            ) { image, _ in
+                continuation.resume(returning: image)
             }
         }
+    }
 
     private func getImageFileExtension(from asset: PHAsset) -> String {
-           // UTI를 확인하여 확장자 결정
-           if let uti = asset.value(forKey: "uniformTypeIdentifier") as? String {
-               if uti == "public.png" {
-                   return "png"
-               }
-           }
-           return "jpg" // 기본값은 jpg
-       }
-
+        if let uti = asset.value(forKey: "uniformTypeIdentifier") as? String {
+            if uti == "public.png" { return "png" }
+        }
+        return "jpg"
+    }
 }

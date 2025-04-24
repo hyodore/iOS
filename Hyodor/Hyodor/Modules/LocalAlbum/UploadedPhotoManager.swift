@@ -13,12 +13,12 @@ class UploadedPhotoManager {
     private let uploadedPhotosKey = "uploadedPhotos"
 
     // 모든 업로드된 사진 정보 가져오기
-    func getAllUploadedPhotos() -> [UploadedPhotoInfo] {
+    func getAllUploadedPhotos() -> [UploadedLocalPhotoInfo] {
         guard let savedData = userDefaults.array(forKey: uploadedPhotosKey) as? [[String: Any]] else {
             return []
         }
 
-        return savedData.compactMap { UploadedPhotoInfo.fromDictionary($0) }
+        return savedData.compactMap { UploadedLocalPhotoInfo.fromDictionary($0) }
     }
 
     // 특정 사진이 업로드되었는지 확인
@@ -27,7 +27,7 @@ class UploadedPhotoManager {
     }
 
     // 업로드된 사진 정보 저장
-    func saveUploadedPhoto(_ photo: UploadedPhotoInfo) {
+    func saveUploadedPhoto(_ photo: UploadedLocalPhotoInfo) {
         var savedData = userDefaults.array(forKey: uploadedPhotosKey) as? [[String: Any]] ?? []
 
         // 이미 있는 경우 업데이트
@@ -41,7 +41,7 @@ class UploadedPhotoManager {
     }
 
     // 여러 업로드된 사진 정보 저장
-    func saveUploadedPhotos(_ photos: [UploadedPhotoInfo]) {
+    func saveUploadedPhotos(_ photos: [UploadedLocalPhotoInfo]) {
         for photo in photos {
             saveUploadedPhoto(photo)
         }

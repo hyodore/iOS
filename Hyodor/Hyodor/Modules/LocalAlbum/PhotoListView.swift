@@ -5,7 +5,6 @@
 //  Created by 김상준 on 4/14/25.
 //
 
-// MARK: - 뷰
 import SwiftUI
 import Photos
 
@@ -43,9 +42,11 @@ struct PhotoListView: View {
 
                 // 업로드 버튼
                 Button(action: {
-                    viewModel.uploadSelectedPhotos { response in
-                        // 업로드 완료 후 콜백 호출
-                        onUploadComplete?(response)
+                    Task {
+                        await viewModel.uploadSelectedPhotos { response in
+                            // 업로드 완료 후 콜백 호출
+                            onUploadComplete?(response)
+                        }
                     }
                 }) {
                     HStack(spacing: 8) {
