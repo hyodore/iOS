@@ -9,9 +9,9 @@
 import SwiftUI
 import Photos
 
-
 struct PhotoListView: View {
     @ObservedObject var viewModel: PhotoListViewModel
+    var onUploadComplete: ((UploadCompleteResponse) -> Void)?
 
     private let columns = [
         GridItem(.flexible(), spacing: 2),
@@ -42,7 +42,12 @@ struct PhotoListView: View {
                 }
 
                 // 업로드 버튼
-                Button(action: viewModel.uploadSelectedPhotos) {
+                Button(action: {
+                    viewModel.uploadSelectedPhotos { response in
+                        // 업로드 완료 후 콜백 호출
+                        onUploadComplete?(response)
+                    }
+                }) {
                     HStack(spacing: 8) {
                         if viewModel.isUploading {
                             ProgressView()
@@ -71,7 +76,7 @@ struct PhotoListView: View {
                 .accessibilityLabel(viewModel.isUploading ? "업로드 중" : "사진 업로드")
                 .accessibilityHint(!viewModel.hasSelectedPhotos ? "사진을 선택해야 업로드할 수 있습니다." : "선택한 사진을 공유 앨범에 업로드합니다.")
             }
-            .navigationTitle("사진첩")
+            .navigationTitle("사진 선택")
             .onAppear {
                 viewModel.requestPhotoLibraryAccess()
             }
@@ -124,13 +129,5 @@ struct PhotoListView: View {
             }
         }
         .animation(.easeInOut, value: viewModel.isUploading)
-    }
-}
-
-// MARK: - 프리뷰
-struct PhotoListView_Previews: PreviewProvider {
-    static var previews: some View {
-        PhotoListView(viewModel: PhotoListViewModel())
-            .preferredColorScheme(.light)
     }
 }

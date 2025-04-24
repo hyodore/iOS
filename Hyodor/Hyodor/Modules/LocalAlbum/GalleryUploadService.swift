@@ -6,8 +6,7 @@
 //
 
 // MARK: - 네트워크 서비스
-import Foundation
-import UIKit
+import SwiftUI
 
 protocol GalleryUploadServiceProtocol {
     func requestPresignedURLs(imageInfos: [[String: String]], completion: @escaping (Result<[PresignedURLResponse], Error>) -> Void)
@@ -16,11 +15,14 @@ protocol GalleryUploadServiceProtocol {
 }
 
 class GalleryUploadService: GalleryUploadServiceProtocol {
-    // 서버 URL (실제 환경에 맞게 수정 필요)
-    private let baseURL = "http://localhost:8080"
+    // 서버 URL
+    private let baseURL = "http://107.21.85.186:8080"
 
     // 1. Presigned URL 발급 요청
-    func requestPresignedURLs(imageInfos: [[String: String]], completion: @escaping (Result<[PresignedURLResponse], Error>) -> Void) {
+    func requestPresignedURLs(
+        imageInfos: [[String: String]],
+        completion: @escaping (Result<[PresignedURLResponse], Error>) -> Void
+    ) {
         guard let url = URL(string: "\(baseURL)/api/gallery/upload/init") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
             return
