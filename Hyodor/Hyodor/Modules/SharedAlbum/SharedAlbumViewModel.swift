@@ -11,10 +11,13 @@ class SharedAlbumViewModel {
     var photos: [SharedPhoto] = []
     var isLoading = false
     var errorMessage: String?
+    private let uploadedPhotoManager = UploadedPhotoManager()
 
     let baseURL = "http://107.21.85.186:8080"
     let userId = "user123"
 
+
+    // 조회 API 호출
     func syncPhotos() async {
         isLoading = true
         defer { isLoading = false }
@@ -54,34 +57,48 @@ class SharedAlbumViewModel {
     }
 
     // 삭제 API 호출
-        func deletePhotos(photoIds: [String]) async {
-            guard !photoIds.isEmpty else { return }
-            isLoading = true
-            defer { isLoading = false }
+    func deletePhotos(photoIds: [String]) async {
+        guard !photoIds.isEmpty else { return }
+        isLoading = true
+        defer { isLoading = false }
 
-            guard let url = URL(string: "\(baseURL)/api/gallery/delete") else {
-                errorMessage = "잘못된 URL"
+        guard let url = URL(string: "\(baseURL)/api/gallery/delete") else {
+            errorMessage = "잘못된 URL"
+            return
+        }
+        let body = [
+            "userId": userId,
+            "photoIds": photoIds
+        ] as [String : Any]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                errorMessage = "삭제 실패: 서버 오류"
                 return
             }
-            let body = [
-                "userId": userId,
-                "photoIds": photoIds
-            ] as [String : Any]
+            // 1. 서버 동기화
+            await syncPhotos()
 
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.addValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-            do {
-                request.httpBody = try JSONSerialization.data(withJSONObject: body)
-                let (data, response) = try await URLSession.shared.data(for: request)
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    errorMessage = "삭제 실패: 서버 오류"
-                    return
-                }
-                // 삭제 성공 후, 서버 동기화
-                await syncPhotos()
-            } catch {
-                errorMessage = "삭제 실패: \(error.localizedDescription)"
+            // 2. 업로드 정보도 삭제!
+            // photoIds는 서버의 photoId(UUID)임.
+            // UploadedPhotoManager는 assetId(PHAsset.localIdentifier)로 관리함.
+            // → photoId와 assetId를 매핑해서 assetId를 찾아야 함.
+
+            let uploadedPhotos = uploadedPhotoManager.getAllUploadedPhotos()
+            let toRemoveAssetIds = uploadedPhotos
+                .filter { photoIds.contains($0.photoId) }
+                .map { $0.id }
+
+            for assetId in toRemoveAssetIds {
+                uploadedPhotoManager.removeUploadedPhoto(assetId: assetId)
             }
+        } catch {
+            errorMessage = "삭제 실패: \(error.localizedDescription)"
         }
+    }
 }
