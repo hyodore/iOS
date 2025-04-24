@@ -58,7 +58,7 @@ extension String {
 
 struct SharedPhotoCell: View {
     let photo: SharedPhoto
-    private var cellSize: CGFloat { (UIScreen.main.bounds.width - 4) / 3 }
+    private var cellSize: CGFloat { UIScreen.main.bounds.width  / 3 }
     @State private var image: UIImage?
     @State private var isLoading = true
 
@@ -83,6 +83,9 @@ struct SharedPhotoCell: View {
                 }
             }
         }
+        .frame(width: cellSize, height: cellSize)
+        .background(Color.clear)
+        .contentShape(Rectangle())
         .onAppear { loadImage() }
     }
 

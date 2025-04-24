@@ -16,9 +16,9 @@ struct SharedAlbumView: View {
     @State private var selectedPhotoIds: Set<String> = []
 
     private let columns = [
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2)
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0)
     ]
 
     var body: some View {
