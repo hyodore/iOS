@@ -5,6 +5,7 @@
 //  Created by 김상준 on 4/24/25.
 //
 import Foundation
+
 @Observable
 class SharedAlbumViewModel {
     var photos: [SharedPhoto] = []

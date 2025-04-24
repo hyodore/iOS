@@ -7,15 +7,13 @@
 
 import SwiftUI
 
-// 공유 앨범 사진 셀
 struct SharedPhotoCell: View {
     let photo: SharedPhoto
     @State private var image: Image?
     @State private var isLoading = true
 
-    // 셀 크기 계산
     private var cellSize: CGFloat {
-        (UIScreen.main.bounds.width - 6) / 2 // 2열, 간격 고려
+        (UIScreen.main.bounds.width - 4) / 3
     }
 
     var body: some View {
@@ -23,14 +21,13 @@ struct SharedPhotoCell: View {
             if let image = image {
                 image
                     .resizable()
-                    .scaledToFill()
+                    .aspectRatio(contentMode: .fill)
                     .frame(width: cellSize, height: cellSize)
                     .clipped()
             } else {
                 Rectangle()
                     .fill(Color.gray.opacity(0.3))
                     .frame(width: cellSize, height: cellSize)
-
                 if isLoading {
                     ProgressView()
                 } else {
@@ -40,9 +37,7 @@ struct SharedPhotoCell: View {
                 }
             }
         }
-        .onAppear {
-            loadImage()
-        }
+        .onAppear { loadImage() }
     }
 
     private func loadImage() {
@@ -50,10 +45,8 @@ struct SharedPhotoCell: View {
             isLoading = false
             return
         }
-
-        URLSession.shared.dataTask(with: imageURL) { data, response, error in
+        URLSession.shared.dataTask(with: imageURL) { data, _, _ in
             isLoading = false
-
             if let data = data, let uiImage = UIImage(data: data) {
                 DispatchQueue.main.async {
                     self.image = Image(uiImage: uiImage)
