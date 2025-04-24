@@ -9,15 +9,50 @@ import SwiftUI
 
 class ImageCache {
     static let shared = ImageCache()
-    private let cache = NSCache<NSString, UIImage>()
-    private init() {}
+    private let memoryCache = NSCache<NSString, UIImage>()
+    private let fileManager = FileManager.default
 
-    func set(_ image: UIImage, forKey key: String) {
-        cache.setObject(image, forKey: key as NSString)
+    // 디스크 캐시 경로
+    private var diskCacheURL: URL {
+        let caches = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return caches.appendingPathComponent("SharedAlbumImageCache")
     }
 
+    private init() {
+        // 디스크 캐시 폴더 생성
+        try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
+    }
+
+    // 메모리/디스크에서 이미지 반환
     func get(forKey key: String) -> UIImage? {
-        cache.object(forKey: key as NSString)
+        if let img = memoryCache.object(forKey: key as NSString) {
+            return img
+        }
+        let diskURL = diskCacheURL.appendingPathComponent(key.sha256())
+        if let data = try? Data(contentsOf: diskURL), let img = UIImage(data: data) {
+            memoryCache.setObject(img, forKey: key as NSString)
+            return img
+        }
+        return nil
+    }
+
+    // 메모리/디스크에 이미지 저장
+    func set(_ image: UIImage, forKey key: String) {
+        memoryCache.setObject(image, forKey: key as NSString)
+        let diskURL = diskCacheURL.appendingPathComponent(key.sha256())
+        if let data = image.jpegData(compressionQuality: 0.9) {
+            try? data.write(to: diskURL)
+        }
+    }
+}
+
+// SHA256 해시(파일명 충돌 방지)
+import CryptoKit
+extension String {
+    func sha256() -> String {
+        let data = Data(self.utf8)
+        let hash = SHA256.hash(data: data)
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -59,12 +94,15 @@ struct SharedPhotoCell: View {
             return
         }
         URLSession.shared.dataTask(with: url) { data, _, _ in
-            isLoading = false
             if let data = data, let uiImage = UIImage(data: data) {
                 ImageCache.shared.set(uiImage, forKey: url.absoluteString)
-                DispatchQueue.main.async { self.image = uiImage }
+                DispatchQueue.main.async {
+                    self.image = uiImage
+                }
+            }
+            DispatchQueue.main.async {
+                self.isLoading = false
             }
         }.resume()
     }
 }
-
