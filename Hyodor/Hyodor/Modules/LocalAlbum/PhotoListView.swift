@@ -12,10 +12,11 @@ struct PhotoListView: View {
     @ObservedObject var viewModel: PhotoListViewModel
     var onUploadComplete: ((UploadCompleteResponse) -> Void)?
 
+    // spacing 0으로!
     private let columns = [
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2),
-        GridItem(.flexible(), spacing: 2)
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0)
     ]
 
     var body: some View {
@@ -25,26 +26,25 @@ struct PhotoListView: View {
 
             VStack(spacing: 0) {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 2) {
+                    LazyVGrid(columns: columns, spacing: 0) { // spacing 0!
                         ForEach(viewModel.photoAssets) { photoModel in
                             PhotoCell(
                                 asset: photoModel.asset,
                                 isSelected: photoModel.isSelected,
-                                isUploaded: photoModel.isUploaded
+                                isUploaded: photoModel.isUploaded,
+                                onTap: {
+                                    viewModel.handleTap(assetId: photoModel.id)
+                                }
                             )
-                            .onTapGesture {
-                                viewModel.handleTap(assetId: photoModel.id)
-                            }
                         }
                     }
-                    .padding(.horizontal, 2)
+                    .padding(.horizontal, 0)
                 }
 
                 // 업로드 버튼
                 Button(action: {
                     Task {
                         await viewModel.uploadSelectedPhotos { response in
-                            // 업로드 완료 후 콜백 호출
                             onUploadComplete?(response)
                         }
                     }
