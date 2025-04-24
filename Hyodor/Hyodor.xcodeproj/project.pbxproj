@@ -33,9 +33,22 @@
 		07F470D42DACF5B9004E1818 /* HyodorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HyodorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		07C820F62DBA33670090B288 /* Exceptions for "Hyodor" folder in "Hyodor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 07F470BA2DACF5B8004E1818 /* Hyodor */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		07F470BD2DACF5B8004E1818 /* Hyodor */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				07C820F62DBA33670090B288 /* Exceptions for "Hyodor" folder in "Hyodor" target */,
+			);
 			path = Hyodor;
 			sourceTree = "<group>";
 		};
@@ -409,6 +422,7 @@
 				DEVELOPMENT_TEAM = MQR4AUJW5C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Hyodor/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "로컬 사진첩 접근 허용";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -438,6 +452,7 @@
 				DEVELOPMENT_TEAM = MQR4AUJW5C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Hyodor/Info.plist;
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "로컬 사진첩 접근 허용";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
