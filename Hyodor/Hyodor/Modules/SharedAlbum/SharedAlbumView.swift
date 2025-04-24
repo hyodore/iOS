@@ -9,6 +9,7 @@ import SwiftUI
 struct SharedAlbumView: View {
     @State private var viewModel = SharedAlbumViewModel()
     @State private var showingPhotoList = false
+    @State private var selectedPhoto: SharedPhoto? = nil
 
     private let columns = [
         GridItem(.flexible(), spacing: 2),
@@ -19,8 +20,7 @@ struct SharedAlbumView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+                Color(.systemGroupedBackground).ignoresSafeArea()
 
                 VStack {
                     if viewModel.isLoading {
@@ -44,7 +44,12 @@ struct SharedAlbumView: View {
                         ScrollView {
                             LazyVGrid(columns: columns, spacing: 2) {
                                 ForEach(viewModel.photos) { photo in
-                                    SharedPhotoCell(photo: photo)
+                                    NavigationLink(
+                                        destination: SharedPhotoDetailView(photo: photo)
+                                    ) {
+                                        SharedPhotoCell(photo: photo)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal, 2)
