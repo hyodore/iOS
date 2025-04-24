@@ -11,6 +11,10 @@ struct SharedAlbumView: View {
     @State private var showingPhotoList = false
     @State private var selectedPhoto: SharedPhoto? = nil
 
+    // 선택/삭제 관련 상태
+    @State private var isSelectionMode = false
+    @State private var selectedPhotoIds: Set<String> = []
+
     private let columns = [
         GridItem(.flexible(), spacing: 2),
         GridItem(.flexible(), spacing: 2),
@@ -21,7 +25,6 @@ struct SharedAlbumView: View {
         NavigationView {
             ZStack {
                 Color(.systemGroupedBackground).ignoresSafeArea()
-
                 VStack {
                     if viewModel.isLoading {
                         ProgressView("동기화 중...")
@@ -41,15 +44,63 @@ struct SharedAlbumView: View {
                         .padding()
                     }
                     else {
+                        if isSelectionMode {
+                            // 선택 모드 시 선택된 개수 표시
+                            HStack {
+                                Text("선택됨: \(selectedPhotoIds.count)개")
+                                    .foregroundColor(.blue)
+                                    .font(.subheadline)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                        }
                         ScrollView {
                             LazyVGrid(columns: columns, spacing: 2) {
                                 ForEach(viewModel.photos) { photo in
-                                    NavigationLink(
-                                        destination: SharedPhotoDetailView(photo: photo)
-                                    ) {
-                                        SharedPhotoCell(photo: photo)
+                                    ZStack(alignment: .topTrailing) {
+                                        // 셀 탭 동작 분기
+                                        Group {
+                                            if isSelectionMode {
+                                                SharedPhotoCell(photo: photo)
+                                                    .overlay(
+                                                        Circle()
+                                                            .stroke(selectedPhotoIds.contains(photo.photoId) ? Color.blue : Color.gray.opacity(0.5), lineWidth: 2)
+                                                            .frame(width: 26, height: 26)
+                                                            .padding(6)
+                                                    )
+                                                    .opacity(selectedPhotoIds.contains(photo.photoId) ? 0.7 : 1.0)
+                                                    .onTapGesture {
+                                                        if selectedPhotoIds.contains(photo.photoId) {
+                                                            selectedPhotoIds.remove(photo.photoId)
+                                                        } else {
+                                                            selectedPhotoIds.insert(photo.photoId)
+                                                        }
+                                                    }
+                                            } else {
+                                                NavigationLink(
+                                                    destination: SharedPhotoDetailView(photo: photo)
+                                                ) {
+                                                    SharedPhotoCell(photo: photo)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
+                                        }
+                                        // 선택 모드일 때 체크마크 표시
+                                        if isSelectionMode {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(selectedPhotoIds.contains(photo.photoId) ? Color.blue : Color.white)
+                                                    .frame(width: 22, height: 22)
+                                                    .shadow(radius: 1)
+                                                if selectedPhotoIds.contains(photo.photoId) {
+                                                    Image(systemName: "checkmark")
+                                                        .foregroundColor(.white)
+                                                        .font(.system(size: 12, weight: .bold))
+                                                }
+                                            }
+                                            .padding(7)
+                                        }
                                     }
-                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal, 2)
@@ -58,11 +109,36 @@ struct SharedAlbumView: View {
                 }
                 .navigationTitle("공유 앨범")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        // 선택 모드: 삭제 버튼
+                        if isSelectionMode {
+                            Button {
+                                Task {
+                                    await viewModel.deletePhotos(photoIds: Array(selectedPhotoIds))
+                                    selectedPhotoIds.removeAll()
+                                    isSelectionMode = false
+                                }
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(selectedPhotoIds.isEmpty ? .gray : .red)
+                            }
+                            .disabled(selectedPhotoIds.isEmpty)
+                        } else {
+                            // 일반 모드: + 버튼
+                            Button {
+                                showingPhotoList = true
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                        }
+                        // 선택/완료 토글 버튼
                         Button {
-                            showingPhotoList = true
+                            withAnimation {
+                                isSelectionMode.toggle()
+                                selectedPhotoIds.removeAll()
+                            }
                         } label: {
-                            Image(systemName: "plus")
+                            Text(isSelectionMode ? "완료" : "선택")
                         }
                     }
                 }

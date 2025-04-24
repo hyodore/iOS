@@ -52,4 +52,36 @@ class SharedAlbumViewModel {
             errorMessage = "네트워크/파싱 오류: \(error.localizedDescription)"
         }
     }
+
+    // 삭제 API 호출
+        func deletePhotos(photoIds: [String]) async {
+            guard !photoIds.isEmpty else { return }
+            isLoading = true
+            defer { isLoading = false }
+
+            guard let url = URL(string: "\(baseURL)/api/gallery/delete") else {
+                errorMessage = "잘못된 URL"
+                return
+            }
+            let body = [
+                "userId": userId,
+                "photoIds": photoIds
+            ] as [String : Any]
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.addValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
+            do {
+                request.httpBody = try JSONSerialization.data(withJSONObject: body)
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                    errorMessage = "삭제 실패: 서버 오류"
+                    return
+                }
+                // 삭제 성공 후, 서버 동기화
+                await syncPhotos()
+            } catch {
+                errorMessage = "삭제 실패: \(error.localizedDescription)"
+            }
+        }
 }
