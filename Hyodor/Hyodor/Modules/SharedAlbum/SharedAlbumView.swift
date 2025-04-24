@@ -4,17 +4,14 @@
 //
 //  Created by 김상준 on 4/14/25.
 //
-
 import SwiftUI
-import Photos
 
 struct SharedAlbumView: View {
-    @StateObject private var albumModel = SharedAlbumModel()
+    @State private var viewModel = SharedAlbumViewModel()
     @State private var showingPhotoList = false
-    @State private var showingUploadSuccess = false
 
-    // 그리드 레이아웃
     private let columns = [
+        GridItem(.flexible(), spacing: 2),
         GridItem(.flexible(), spacing: 2),
         GridItem(.flexible(), spacing: 2)
     ]
@@ -26,27 +23,27 @@ struct SharedAlbumView: View {
                     .ignoresSafeArea()
 
                 VStack {
-                    if albumModel.isLoading {
-                        ProgressView("로딩 중...")
-                    } else if albumModel.photos.isEmpty {
+                    if viewModel.isLoading {
+                        ProgressView("동기화 중...")
+                    }
+                    else if viewModel.photos.isEmpty {
                         VStack(spacing: 20) {
                             Image(systemName: "photo.on.rectangle.angled")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
-
                             Text("공유 앨범이 비어있습니다")
                                 .font(.headline)
-
                             Text("오른쪽 상단의 + 버튼을 눌러\n사진을 추가해보세요")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                         }
                         .padding()
-                    } else {
+                    }
+                    else {
                         ScrollView {
                             LazyVGrid(columns: columns, spacing: 2) {
-                                ForEach(albumModel.photos) { photo in
+                                ForEach(viewModel.photos) { photo in
                                     SharedPhotoCell(photo: photo)
                                 }
                             }
@@ -57,33 +54,32 @@ struct SharedAlbumView: View {
                 .navigationTitle("공유 앨범")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
+                        Button {
                             showingPhotoList = true
-                        }) {
+                        } label: {
                             Image(systemName: "plus")
                         }
                     }
                 }
-                .sheet(isPresented: $showingPhotoList) {
-                    // 사진 선택 후 돌아오면 앨범 새로고침
-                    albumModel.loadSharedPhotos()
-                } content: {
+                .sheet(isPresented: $showingPhotoList, onDismiss: {
+                    Task { await viewModel.syncPhotos() }
+                }) {
                     NavigationView {
-                        PhotoListView(viewModel: PhotoListViewModel(), onUploadComplete: { response in
-                            // 업로드 완료 콜백
-                            albumModel.addNewPhotos(from: response)
+                        PhotoListView(viewModel: PhotoListViewModel(), onUploadComplete: { _ in
                             showingPhotoList = false
-                            showingUploadSuccess = true
                         })
                     }
                 }
-                .alert("업로드 완료", isPresented: $showingUploadSuccess) {
-                    Button("확인", role: .cancel) {}
-                } message: {
-                    Text("사진이 공유 앨범에 추가되었습니다.")
+                .task {
+                    await viewModel.syncPhotos()
                 }
-                .onAppear {
-                    albumModel.loadSharedPhotos()
+                .refreshable {
+                    await viewModel.syncPhotos()
+                }
+                .alert("오류", isPresented: .constant(viewModel.errorMessage != nil)) {
+                    Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+                } message: {
+                    Text(viewModel.errorMessage ?? "")
                 }
             }
         }
