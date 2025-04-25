@@ -9,10 +9,9 @@ import SwiftUI
 import Photos
 
 struct PhotoListView: View {
-    @ObservedObject var viewModel: PhotoListViewModel
+    @State var viewModel: PhotoListViewModel
     var onUploadComplete: ((UploadCompleteResponse) -> Void)?
 
-    // spacing 0으로!
     private let columns = [
         GridItem(.flexible(), spacing: 0),
         GridItem(.flexible(), spacing: 0),
@@ -26,7 +25,7 @@ struct PhotoListView: View {
 
             VStack(spacing: 0) {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 0) { // spacing 0!
+                    LazyVGrid(columns: columns, spacing: 0) {
                         ForEach(viewModel.photoAssets) { photoModel in
                             PhotoCell(
                                 asset: photoModel.asset,
@@ -102,7 +101,6 @@ struct PhotoListView: View {
                 }
             }
 
-            // 업로드 중 오버레이
             if viewModel.isUploading {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
