@@ -8,20 +8,20 @@ import Foundation
 
 @Observable
 class SharedAlbumViewModel {
-    var photos: [SharedPhoto] = []
+    var photos: [SharedPhoto] = []  // 공유 앨범의 사진 목록
     var isLoading = false
     var errorMessage: String?
-    private let uploadedPhotoManager = UploadedPhotoManager()
+    private let uploadedPhotoManager = UploadedPhotoManager() // 업로드된 사진 정보 관리 매니저
 
-    let baseURL = "http://107.21.85.186:8080"
-    let userId = "user123"
+    private let baseURL = "http://107.21.85.186:8080"
+    private let userId = "user123"
 
-
-    // 조회 API 호출
+    // 서버에서 전체 사진 목록을 동기화
     func syncPhotos() async {
         isLoading = true
-        defer { isLoading = false }
+        defer { isLoading = false } // 메서드 종료시 로딩 상태 해제
 
+        // 1. URL 구성: (baseURL)/api/gallery/all 엔드포인트
         guard var components = URLComponents(string: "\(baseURL)/api/gallery/all") else {
             errorMessage = "잘못된 URL입니다"
             return
@@ -32,63 +32,71 @@ class SharedAlbumViewModel {
             return
         }
 
+        // 2. GET 요청 설정
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         do {
+            // 3. 네트워크 요청 실행
             let (data, response) = try await URLSession.shared.data(for: request)
+            // 4. 응답 검증: HTTP 상태 코드가 200~299인지 확인
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 errorMessage = "서버 오류가 발생했습니다"
                 return
             }
+            // 5. JSON 데이터를 SharedPhoto 배열로 디코딩
             let decoded = try JSONDecoder().decode(AllPhotosResponse.self, from: data)
+
+            // 6. 삭제되지 않은 사진만 필터링하고, 최신순으로 정렬
             self.photos = decoded.photos
                 .filter { !$0.deleted }
                 .sorted { $0.uploadedAt > $1.uploadedAt }
-
-            print("photos.count = \(photos.count)")
-            for photo in photos {
-                print("photoId: \(photo.photoId), url: \(photo.photoUrl)")
-            }
         } catch {
             errorMessage = "네트워크/파싱 오류: \(error.localizedDescription)"
         }
     }
 
-    // 삭제 API 호출
+    // 서버에서 사진을 삭제하고 로컬 상태를 동기화하는 메서드
+    // - Parameter photoIds: 삭제할 사진의 서버 photoId 목록
     func deletePhotos(photoIds: [String]) async {
+        // 1. photoIds가 비어있으면 아무 작업도 하지 않음
         guard !photoIds.isEmpty else { return }
+        // 2. 로딩 상태 시작
         isLoading = true
+        // 메서드 종료 시 로딩 상태 해제
         defer { isLoading = false }
-
+        // 3. URL 구성: (baseURL)/api/gallery/delete 엔드포인트
         guard let url = URL(string: "\(baseURL)/api/gallery/delete") else {
             errorMessage = "잘못된 URL"
             return
         }
+        // 4. POST 요청 바디 생성: userId와 photoIds 포함
         let body = [
             "userId": userId,
             "photoIds": photoIds
         ] as [String : Any]
-
+        // 5. POST 요청 설정
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
+
         do {
+            // 6. 요청 바디를 JSON으로 직렬화
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
-            let (data, response) = try await URLSession.shared.data(for: request)
+            // 7. 네트워크 요청 실행
+            let (_, response) = try await URLSession.shared.data(for: request)
+            // 8. 응답 검증: HTTP 상태 코드가 200~299인지 확인
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 errorMessage = "삭제 실패: 서버 오류"
                 return
             }
-            // 1. 서버 동기화
+            // 9. 서버 사진 목록 동기화
             await syncPhotos()
 
-            // 2. 업로드 정보도 삭제!
-            // photoIds는 서버의 photoId(UUID)임.
-            // UploadedPhotoManager는 assetId(PHAsset.localIdentifier)로 관리함.
-            // → photoId와 assetId를 매핑해서 assetId를 찾아야 함.
-
+            // 10. 로컬 업로드 정보 삭제
+            // - 서버의 photoId(UUID)와 로컬의 assetId(PHAsset.localIdentifier)를 매핑
+            // - UploadedPhotoManager에서 해당 assetId를 찾아 제거
             let uploadedPhotos = uploadedPhotoManager.getAllUploadedPhotos()
             let toRemoveAssetIds = uploadedPhotos
                 .filter { photoIds.contains($0.photoId) }
@@ -98,6 +106,7 @@ class SharedAlbumViewModel {
                 uploadedPhotoManager.removeUploadedPhoto(assetId: assetId)
             }
         } catch {
+            // 11. 에러 처리: 네트워크 또는 JSON 직렬화 에러
             errorMessage = "삭제 실패: \(error.localizedDescription)"
         }
     }
