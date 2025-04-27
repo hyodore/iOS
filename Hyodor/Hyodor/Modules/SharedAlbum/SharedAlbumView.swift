@@ -107,7 +107,6 @@ struct SharedAlbumView: View {
                         }
                     }
                 }
-                .navigationTitle("공유 앨범")
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         // 선택 모드: 삭제 버튼
