@@ -5,8 +5,7 @@
 //  Created by 김상준 on 4/23/25.
 //
 
-import Foundation
-import UIKit
+import SwiftUI
 
 // MARK: - 프로토콜 정의 (async/await)
 protocol GalleryUploadServiceProtocol {
