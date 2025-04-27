@@ -11,7 +11,7 @@ import SwiftUI
 struct ContentView: App {
     var body: some Scene {
         WindowGroup {
-             SharedAlbumView()
+             HomeView()
         }
     }
 }
