@@ -9,9 +9,10 @@ import SwiftUI
 
 @main
 struct ContentView: App {
+    let coordinator = HomeCoordinator()
     var body: some Scene {
         WindowGroup {
-             HomeView()
+            HomeView(viewModel: HomeViewModel(coordinator: coordinator), coordinator: coordinator)
         }
     }
 }

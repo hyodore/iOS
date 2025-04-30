@@ -112,6 +112,7 @@ struct SharedAlbumView: View {
                         // 선택 모드: 삭제 버튼
                         if isSelectionMode {
                             Button {
+                                
                                 Task {
                                     await viewModel.deletePhotos(photoIds: Array(selectedPhotoIds))
                                     selectedPhotoIds.removeAll()
