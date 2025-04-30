@@ -6,48 +6,234 @@
 //
 
 import SwiftUI
-import PhotosUI
 
-// 일정 데이터 모델
-struct Event: Identifiable, Equatable, Hashable {
-    var id = UUID()
+// MARK: - Model
+struct Event: Codable, Identifiable {
+    let id: UUID
     var title: String
     var date: Date
-    var color: Color = .blue
-    var notes: String = ""
-
-    static func == (lhs: Event, rhs: Event) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+    var notes: String
 }
-// 일정 관리 클래스
-class EventStore: ObservableObject {
-    @Published var events: [Event] = []
 
-    func addEvent(_ event: Event) {
-        events.append(event)
-    }
+// MARK: - UserDefaults 저장소
+class EventStorage {
+    private let userDefaults = UserDefaults.standard
+    private let eventsKey = "events"
 
-    func removeEvent(_ event: Event) {
-        events.removeAll { $0.id == event.id }
-    }
-
-    func eventsForDate(_ date: Date) -> [Event] {
-        let calendar = Calendar.current
-        return events.filter {
-            calendar.isDate($0.date, inSameDayAs: date)
+    func saveEvents(_ events: [Event]) {
+        do {
+            let data = try JSONEncoder().encode(events)
+            userDefaults.set(data, forKey: eventsKey)
+        } catch {
+            print("Failed to save events: \(error)")
         }
     }
 
-    func hasEvents(for date: Date) -> Bool {
-        !eventsForDate(date).isEmpty
+    func loadEvents() -> [Event] {
+        guard let data = userDefaults.data(forKey: eventsKey) else { return [] }
+        do {
+            let events = try JSONDecoder().decode([Event].self, from: data)
+            return events
+        } catch {
+            print("Failed to load events: \(error)")
+            return []
+        }
     }
 }
-// 일별 셀 뷰
+
+// 서버와 통신하는 모델
+struct ScheduleUploadRequest: Codable {
+    let scheduleId: String
+    let userId: String
+    let scheduleDesc: String
+    let scheduleDate: String
+}
+
+struct ScheduleDeleteRequest: Codable {
+    let scheduleId: String
+}
+
+
+// MARK: - Coordinator
+@Observable
+class CalendarCoordinator{
+    var showAddEvent: Bool = false
+
+    func presentAddEvent() {
+        showAddEvent = true
+    }
+    func dismissAddEvent() {
+        showAddEvent = false
+    }
+}
+
+// MARK: - View
+
+struct CalendarView: View {
+    @State private var viewModel = CalendarViewModel()
+    @State private var coordinator = CalendarCoordinator()
+
+    private let calendar = Calendar.current
+    private let dateFormatter = DateFormatter()
+    private let weekdaySymbols = Calendar.current.shortWeekdaySymbols
+
+    var body: some View {
+        VStack(spacing: 20) {
+            // 헤더
+            HStack {
+                Spacer()
+                Button(action: {
+                    viewModel.selectedDate = Date()}) {
+                    Text("오늘")
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .strokeBorder(Color.blue, lineWidth: 1)
+                        )
+                }
+                Button(action: {
+                    coordinator.presentAddEvent()
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            // 월 이동
+            HStack {
+                Button(action: { moveMonth(-1) }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                Spacer()
+                Text(monthYearString(from: viewModel.selectedDate))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                Button(action: { moveMonth(1) }) {
+                    Image(systemName: "chevron.right")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal)
+
+            // 요일 헤더
+            HStack {
+                ForEach(weekdaySymbols, id: \.self) { symbol in
+                    Text(symbol)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            // 캘린더 그리드
+            let days = daysInMonth()
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
+                ForEach(days.indices, id: \.self) { index in
+                    let date = days[index]
+                    if let date = date {
+                        DayView(
+                            date: date,
+                            isSelected: calendar.isDate(date, inSameDayAs: viewModel.selectedDate),
+                            isToday: calendar.isDateInToday(date),
+                            hasEvents: viewModel.events.contains { calendar.isDate($0.date, inSameDayAs: date) }
+                        )
+                        .onTapGesture {
+                            viewModel.selectedDate = date
+                        }
+                    } else {
+                        Rectangle()
+                            .foregroundColor(.clear)
+                            .frame(height: 40)
+                    }
+                }
+            }
+            // 선택된 날짜
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(fullDateString(from: viewModel.selectedDate))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            // 일정 목록
+            List {
+                ForEach(viewModel.events.filter {
+                    calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
+                }) { event in
+                    EventRow(event: event, viewModel: viewModel)
+                }
+            }
+            .listStyle(PlainListStyle())
+
+            Spacer()
+        }
+        .padding()
+        .sheet(isPresented: $coordinator.showAddEvent) {
+            AddEventView(viewModel: viewModel, coordinator: coordinator, selectedDate: viewModel.selectedDate)
+        }
+    }
+
+    // MARK: - 캘린더 유틸
+
+    private func daysInMonth() -> [Date?] {
+        var days = [Date?]()
+
+        let comps = calendar.dateComponents([.year, .month], from: viewModel.selectedDate)
+        guard let firstDayOfMonth = calendar.date(from: comps) else { return [] }
+        guard let lastDayOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDayOfMonth) else { return [] }
+
+        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
+        for _ in 1..<firstWeekday {
+            days.append(nil)
+        }
+
+        let daysInMonth = calendar.component(.day, from: lastDayOfMonth)
+        for day in 1...daysInMonth {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstDayOfMonth) {
+                days.append(date)
+            }
+        }
+
+        let remainingCells = 42 - days.count
+        if remainingCells > 0 && remainingCells < 7 {
+            for _ in 0..<remainingCells {
+                days.append(nil)
+            }
+        }
+
+        return days
+    }
+
+    private func moveMonth(_ offset: Int) {
+        if let newDate = calendar.date(byAdding: .month, value: offset, to: viewModel.selectedDate) {
+            viewModel.selectedDate = newDate
+        }
+    }
+
+    private func monthYearString(from date: Date) -> String {
+        dateFormatter.dateFormat = "MMMM yyyy"
+        return dateFormatter.string(from: date)
+    }
+
+    private func fullDateString(from date: Date) -> String {
+        dateFormatter.dateFormat = "yyyy년 M월 d일 EEEE"
+        return dateFormatter.string(from: date)
+    }
+}
+
+// MARK: - Day Cell
+
 struct DayView: View {
     let date: Date
     let isSelected: Bool
@@ -73,8 +259,6 @@ struct DayView: View {
                         }
                     }
                 )
-
-            // 일정이 있으면 점으로 표시
             if hasEvents {
                 Circle()
                     .fill(Color.blue)
@@ -94,109 +278,13 @@ struct DayView: View {
         }
     }
 }
-// 일정 추가 화면
-struct AddEventView: View {
-    @Binding var isPresented: Bool
-    @ObservedObject var eventStore: EventStore
-    var selectedDate: Date
 
-    @State private var title: String = ""
-    @State private var notes: String = ""
-    @State private var eventDate: Date
-    @State private var eventColor: Color = .blue
+// MARK: - 일정 행
 
-    init(isPresented: Binding<Bool>, eventStore: EventStore, selectedDate: Date) {
-        self._isPresented = isPresented
-        self.eventStore = eventStore
-        self.selectedDate = selectedDate
-
-        // 선택된 날짜의 오후 12시로 초기화
-        var components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
-        components.hour = 12
-        self._eventDate = State(initialValue: Calendar.current.date(from: components) ?? selectedDate)
-    }
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("일정 정보")) {
-                    TextField("제목", text: $title)
-                    DatePicker("날짜 및 시간", selection: $eventDate)
-
-                    HStack {
-                        Text("색상")
-                        Spacer()
-                        ColorPicker("", selection: $eventColor)
-                    }
-                }
-
-                Section(header: Text("메모")) {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 100)
-                }
-
-                Section {
-                    Button("저장하기") {
-                        let newEvent = Event(
-                            title: title,
-                            date: eventDate,
-                            color: eventColor,
-                            notes: notes
-                        )
-                        eventStore.addEvent(newEvent)
-                        isPresented = false
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
-            .navigationTitle("새 일정")
-            .navigationBarItems(
-                leading: Button("취소") {
-                    isPresented = false
-                }
-            )
-        }
-    }
-}
-
-struct EventListView: View {
-    let events: [Event]
-    let dateString: String
-    @ObservedObject var eventStore: EventStore
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(dateString)
-                .font(.headline)
-                .padding(.horizontal)
-
-            if events.isEmpty {
-                HStack {
-                    Spacer()
-                    Text("일정이 없습니다")
-                        .foregroundColor(.secondary)
-                        .padding()
-                    Spacer()
-                }
-            } else {
-                // List 대신 ScrollView와 LazyVStack 사용
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(events) { event in
-                            EventRow(event: event, eventStore: eventStore)
-                                .padding(.horizontal)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 struct EventRow: View {
     let event: Event
-    @ObservedObject var eventStore: EventStore
+    @State var viewModel: CalendarViewModel
 
-    // 변수를 View 빌더 외부로 이동
     private var timeFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -206,19 +294,15 @@ struct EventRow: View {
     var body: some View {
         HStack {
             Rectangle()
-                .fill(event.color)
                 .frame(width: 4)
                 .cornerRadius(2)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(event.title)
                     .font(.headline)
-
-                // 계산 속성 사용
                 Text(timeFormatter.string(from: event.date))
                     .font(.caption)
                     .foregroundColor(.secondary)
-
                 if !event.notes.isEmpty {
                     Text(event.notes)
                         .font(.caption)
@@ -230,9 +314,8 @@ struct EventRow: View {
 
             Spacer()
 
-            // 삭제 버튼 추가
             Button(action: {
-                eventStore.removeEvent(event)
+                viewModel.removeEvent(event)
             }) {
                 Image(systemName: "trash")
                     .foregroundColor(.red)
@@ -244,184 +327,57 @@ struct EventRow: View {
         .shadow(color: Color.black.opacity(0.1), radius: 1, x: 0, y: 1)
     }
 }
-// 메인 캘린더 뷰
-struct CalendarView: View {
-    @StateObject private var eventStore = EventStore()
-    @State private var selectedDate = Date()
-    @State private var displayedMonth: Date = Date()
-    @State private var showingAddEvent = false
 
-    private let calendar = Calendar.current
-    private let dateFormatter = DateFormatter()
-    private let weekdaySymbols = Calendar.current.shortWeekdaySymbols
+// MARK: - 일정 추가 뷰
+
+struct AddEventView: View {
+    @State var viewModel: CalendarViewModel
+    @State var coordinator: CalendarCoordinator
+    var selectedDate: Date
+
+    @State private var title: String = ""
+    @State private var notes: String = ""
+    @State private var eventDate: Date
+    @State private var eventColor: Color = .blue
+
+    init(viewModel: CalendarViewModel, coordinator: CalendarCoordinator, selectedDate: Date) {
+        self.viewModel = viewModel
+        self.coordinator = coordinator
+        self.selectedDate = selectedDate
+        self._eventDate = State(initialValue: selectedDate)
+    }
 
     var body: some View {
-        VStack(spacing: 20) {
-            // 헤더 부분
-
-            HStack {
-                Spacer()
-                Button(action: {
-                    selectedDate = Date()
-                    displayedMonth = Date()
-                }) {
-                    Text("오늘")
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.blue, lineWidth: 1)
-                        )
+        NavigationView {
+            Form {
+                Section(header: Text("일정 정보")) {
+                    TextField("제목", text: $title)
+                    DatePicker("날짜 및 시간", selection: $eventDate)
                 }
-
-                // 일정 추가 버튼
-                Button(action: {
-                    showingAddEvent = true
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.blue)
+                Section(header: Text("메모")) {
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 100)
                 }
-            }
-
-            HStack {
-                Button(action: previousMonth) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                }
-
-                Spacer()
-
-                VStack {
-                    Text(monthYearString(from: displayedMonth))
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-
-                Spacer()
-
-                Button(action: nextMonth) {
-                    Image(systemName: "chevron.right")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(.horizontal)
-
-            // 요일 헤더
-            HStack {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
-                    Text(symbol)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.gray)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-
-            // 캘린더 그리드
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
-                ForEach(daysInMonth(), id: \.self) { date in
-                    if let date = date {
-                        DayView(
-                            date: date,
-                            isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                            isToday: calendar.isDateInToday(date),
-                            hasEvents: eventStore.hasEvents(for: date)
-                        )
-                        .onTapGesture {
-                            selectedDate = date
-                        }
-                    } else {
-                        // 빈 셀
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(height: 40)
+                Section {
+                    Button("저장하기") {
+                        viewModel.addEvent(title: title, date: eventDate, color: eventColor, notes: notes)
+                        coordinator.dismissAddEvent()
                     }
+                    .disabled(title.isEmpty)
                 }
             }
-
-            // 선택된 날짜와 일정 관리 버튼
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(fullDateString(from: selectedDate))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+            .navigationTitle("새 일정")
+            .navigationBarItems(
+                leading: Button("취소") {
+                    coordinator.dismissAddEvent()
                 }
-                Spacer()
-            }
-            .padding(.horizontal)
-
-            // 선택된 날짜의 일정 목록
-            EventListView(
-                events: eventStore.eventsForDate(selectedDate),
-                dateString: "일정",
-                eventStore: eventStore
             )
-            Spacer()
-        }
-        .padding()
-        .sheet(isPresented: $showingAddEvent) {
-            AddEventView(
-                isPresented: $showingAddEvent,
-                eventStore: eventStore,
-                selectedDate: selectedDate
-            )
-        }
-    }
-
-    // 기존 함수들은 동일하게 유지...
-    private func daysInMonth() -> [Date?] {
-        var days = [Date?]()
-
-        let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: displayedMonth))!
-        let lastDayOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDayOfMonth)!
-
-        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
-
-        for _ in 1..<firstWeekday {
-            days.append(nil)
-        }
-
-        let daysInMonth = calendar.component(.day, from: lastDayOfMonth)
-        for day in 1...daysInMonth {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstDayOfMonth) {
-                days.append(date)
-            }
-        }
-
-        let remainingCells = 42 - days.count
-        if remainingCells > 0 && remainingCells < 7 {
-            for _ in 0..<remainingCells {
-                days.append(nil)
-            }
-        }
-
-        return days
-    }
-
-    private func monthYearString(from date: Date) -> String {
-        dateFormatter.dateFormat = "MMMM yyyy"
-        return dateFormatter.string(from: date)
-    }
-
-    private func fullDateString(from date: Date) -> String {
-        dateFormatter.dateFormat = "yyyy년 M월 d일 EEEE"
-        return dateFormatter.string(from: date)
-    }
-
-    private func previousMonth() {
-        if let newMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth) {
-            displayedMonth = newMonth
-        }
-    }
-
-    private func nextMonth() {
-        if let newMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) {
-            displayedMonth = newMonth
         }
     }
 }
 
+//// MARK: - Preview
+//
+//#Preview {
+//    CalendarView()
+//}
