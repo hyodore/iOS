@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State var viewModel: HomeViewModel
+    @State var coordinator: HomeCoordinator
+
     var body: some View {
-        NavigationStack{
+        NavigationStack(path: $coordinator.path) {
             VStack {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
@@ -18,18 +21,21 @@ struct HomeView: View {
                             .fontWeight(.bold)
                         Spacer()
                     }
-                    HStack(spacing: 16) {
-                        NavigationLink(destination: CalendarView()) {
+                    HStack {
+                        Button {
+                            viewModel.didTapCalendar()
+                        } label: {
                             HomeMenuButton(imageName: "calendar", title: "캘린더")
                         }
-                        NavigationLink(destination: SharedAlbumView()) {
+                        Button {
+                            viewModel.didTapSharedAlbum()
+                        } label: {
                             HomeMenuButton(imageName: "camera", title: "공유 앨범")
                         }
                     }
                 }
                 .padding()
-
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 16) {
                     // 부모님 일정
                     SectionHeader(title: "부모님 일정")
                     VStack(spacing: 0) {
@@ -49,7 +55,7 @@ struct HomeView: View {
                         SectionHeader(title: "이상현상 리스트")
                         Spacer()
                         Button("전체 보기") {
-                            // 전체 보기 액션
+                            viewModel.didTapAlert()
                         }
                         .font(.footnote)
                         .foregroundColor(.gray)
@@ -67,118 +73,22 @@ struct HomeView: View {
                     .cornerRadius(8)
                 }
                 .padding(.horizontal)
-                .padding(.top, 24)
+            }
+            .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
+                switch route {
+                case .calendar:
+                    CalendarView()
+                case .sharedAlbum:
+                    SharedAlbumView()
+                case .Alert:
+                    AlertView()
+                }
             }
         }
-    }
-}
-
-// MARK: - 컴포넌트 뷰
-
-struct HomeMenuButton: View {
-    let imageName: String
-    let title: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Image(systemName: imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 32, height: 32)
-                    .foregroundColor(.blue)
-            }
-            Text(title)
-                .font(.footnote)
-                .foregroundColor(.black)
-        }
-        .frame(maxWidth: .infinity,minHeight: 90)
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(.systemGray4), lineWidth: 1)
-        )
-    }
-}
-
-struct SectionHeader: View {
-    let title: String
-    var body: some View {
-        Text(title)
-            .font(.headline)
-            .padding(.bottom, 4)
-    }
-}
-
-struct ScheduleRow: View {
-    let iconName: String
-    let title: String
-    let date: String
-    let time: String
-
-    var body: some View {
-        HStack {
-            Image(systemName: iconName)
-                .resizable()
-                .frame(width: 36, height: 36)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
-                .padding(.trailing, 8)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                Text(date)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            Spacer()
-            Text(time)
-                .font(.body)
-                .foregroundColor(.black)
-        }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 4)
-    }
-}
-
-struct AbnormalRow: View {
-    let icon: String
-    let title: String
-    let date: String
-    var isEmoji: Bool = false
-
-    var body: some View {
-        HStack {
-            if isEmoji {
-                Text("😶‍🌫️") // 원하는 이모지로 교체
-                    .font(.system(size: 28))
-                    .frame(width: 36, height: 36)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-            } else {
-                Image(systemName: icon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
-                    .foregroundColor(.orange)
-                    .frame(width: 36, height: 36)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                Text(date)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            Spacer()
-        }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 4)
     }
 }
 
 #Preview {
-    HomeView()
+    let coordinator = HomeCoordinator()
+    HomeView(viewModel: HomeViewModel(coordinator: coordinator), coordinator: coordinator)
 }
