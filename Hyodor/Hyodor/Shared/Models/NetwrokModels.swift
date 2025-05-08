@@ -7,14 +7,14 @@
 
 import Foundation
 
-// MARK: - Presigned URL 발급 응답
+// MARK: Presigned URL 발급 응답
 struct PresignedURLResponse: Codable {
     let photoId: String        // 사진 UUID
     let uploadUrl: String      // S3 Presigned PUT URL
     let photoUrl: String       // 정적 URL (업로드 후 접근용)
 }
 
-// MARK: - 업로드 완료 요청
+// MARK: 업로드 완료 요청
 struct UploadCompleteRequest: Codable {
     let userId: String
     let photos: [UploadedPhotoInfo]
@@ -26,7 +26,7 @@ struct UploadCompleteRequest: Codable {
     }
 }
 
-// MARK: - 업로드 완료 응답 & 동기화 응답
+// MARK: 업로드 완료 응답 & 동기화 응답
 struct UploadCompleteResponse: Codable {
     let syncedAt: String
     let newPhoto: [PhotoInfo]
@@ -44,14 +44,26 @@ struct UploadCompleteResponse: Codable {
     }
 }
 
-// /api/gallery/sync 응답
+// MARK: /api/gallery/sync 응답
 struct SyncResponse: Codable {
     let syncedAt: String
     let newPhoto: [SharedPhoto]
     let deletedPhoto: [SharedPhoto]
 }
 
-// /api/gallery/all 응답
+// MARK: /api/gallery/all
 struct AllSyncResponse: Codable {
     let photos: [SharedPhoto]
+}
+
+//MARK: /api/schedule/upload
+struct ScheduleUploadRequest: Codable {
+    let scheduleId: String
+    let userId: String
+    let scheduleDesc: String
+    let scheduleDate: String
+}
+// MARK: /api/schedule/delete
+struct ScheduleDeleteRequest: Codable {
+    let scheduleId: String
 }

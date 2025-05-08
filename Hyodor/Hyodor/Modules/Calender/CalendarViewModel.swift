@@ -20,40 +20,40 @@ class CalendarViewModel {
             events = eventStorage.loadEvents()
         }
 
-    // 일정 추가
-    func addEvent(title: String, date: Date, color: Color, notes: String) {
+    // 일정 추가 (서버 업로드 성공시 -> 로컬 데이터 저장)
+    func addEvent(title: String, date: Date, notes: String) {
         let event = Event(id: UUID(), title: title, date: date, notes: notes)
         uploadSchedule(event: event) { [weak self] success in
             guard let self = self else { return }
             if success {
-                // 서버 업로드 성공 시 로컬에 추가
                 self.events.append(event)
                 self.eventStorage.saveEvents(self.events)
             } else {
-                // 실패 시 사용자에게 알림 등 처리
                 print("서버 업로드 실패")
             }
         }
     }
 
-
-    // 일정 삭제
+    // 일정 삭제 (서버 데이터 삭제 성공시 -> 로컬 데이터 삭제)
     func removeEvent(_ event: Event) {
         deleteSchedule(scheduleId: event.id.uuidString) { [weak self] success in
             guard let self = self else { return }
             if success {
-                // 서버 삭제 성공 시 로컬에서 삭제
                 self.events.removeAll { $0.id == event.id }
                 self.eventStorage.saveEvents(self.events)
             } else {
-                // 실패 시 사용자에게 알림 등 처리
                 print("서버 삭제 실패")
             }
         }
     }
-    // 서버 업로드: 성공 시 true, 실패 시 false 반환
+
+    // 서버 업로드: 성공 시 true, 실패 시 false return
     func uploadSchedule(event: Event, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "\(baseURL)/api/schedule/upload") else { completion(false); return }
+        guard let url = URL(string: "\(baseURL)/api/schedule/upload") else {
+            completion(false)
+            return
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
