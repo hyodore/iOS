@@ -7,68 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Model
-struct Event: Codable, Identifiable {
-    let id: UUID
-    var title: String
-    var date: Date
-    var notes: String
-}
-
-// MARK: - UserDefaults 저장소
-class EventStorage {
-    private let userDefaults = UserDefaults.standard
-    private let eventsKey = "events"
-
-    func saveEvents(_ events: [Event]) {
-        do {
-            let data = try JSONEncoder().encode(events)
-            userDefaults.set(data, forKey: eventsKey)
-        } catch {
-            print("Failed to save events: \(error)")
-        }
-    }
-
-    func loadEvents() -> [Event] {
-        guard let data = userDefaults.data(forKey: eventsKey) else { return [] }
-        do {
-            let events = try JSONDecoder().decode([Event].self, from: data)
-            return events
-        } catch {
-            print("Failed to load events: \(error)")
-            return []
-        }
-    }
-}
-
-// 서버와 통신하는 모델
-struct ScheduleUploadRequest: Codable {
-    let scheduleId: String
-    let userId: String
-    let scheduleDesc: String
-    let scheduleDate: String
-}
-
-struct ScheduleDeleteRequest: Codable {
-    let scheduleId: String
-}
-
-
-// MARK: - Coordinator
-@Observable
-class CalendarCoordinator{
-    var showAddEvent: Bool = false
-
-    func presentAddEvent() {
-        showAddEvent = true
-    }
-    func dismissAddEvent() {
-        showAddEvent = false
-    }
-}
-
-// MARK: - View
-
 struct CalendarView: View {
     @State private var viewModel = CalendarViewModel()
     @State private var coordinator = CalendarCoordinator()
@@ -79,7 +17,6 @@ struct CalendarView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // 헤더
             HStack {
                 Spacer()
                 Button(action: {
@@ -101,8 +38,6 @@ struct CalendarView: View {
                         .foregroundColor(.blue)
                 }
             }
-
-            // 월 이동
             HStack {
                 Button(action: { moveMonth(-1) }) {
                     Image(systemName: "chevron.left")
@@ -139,7 +74,7 @@ struct CalendarView: View {
                 ForEach(days.indices, id: \.self) { index in
                     let date = days[index]
                     if let date = date {
-                        DayView(
+                        CalendarCell(
                             date: date,
                             isSelected: calendar.isDate(date, inSameDayAs: viewModel.selectedDate),
                             isToday: calendar.isDateInToday(date),
@@ -155,6 +90,7 @@ struct CalendarView: View {
                     }
                 }
             }
+
             // 선택된 날짜
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -175,17 +111,18 @@ struct CalendarView: View {
                 }
             }
             .listStyle(PlainListStyle())
-
             Spacer()
         }
         .padding()
         .sheet(isPresented: $coordinator.showAddEvent) {
-            AddEventView(viewModel: viewModel, coordinator: coordinator, selectedDate: viewModel.selectedDate)
+            AddEventView(
+                viewModel: viewModel,
+                coordinator: coordinator,
+                selectedDate: viewModel.selectedDate)
         }
     }
 
     // MARK: - 캘린더 유틸
-
     private func daysInMonth() -> [Date?] {
         var days = [Date?]()
 
@@ -232,55 +169,7 @@ struct CalendarView: View {
     }
 }
 
-// MARK: - Day Cell
-
-struct DayView: View {
-    let date: Date
-    let isSelected: Bool
-    let isToday: Bool
-    let hasEvents: Bool
-    private let calendar = Calendar.current
-
-    var body: some View {
-        VStack(spacing: 2) {
-            Text("\(calendar.component(.day, from: date))")
-                .font(.system(size: 16))
-                .fontWeight(isToday ? .bold : .regular)
-                .foregroundColor(foregroundColor)
-                .frame(width: 36, height: 36)
-                .background(
-                    ZStack {
-                        if isSelected {
-                            Circle()
-                                .fill(Color.blue)
-                        } else if isToday {
-                            Circle()
-                                .strokeBorder(Color.blue, lineWidth: 1)
-                        }
-                    }
-                )
-            if hasEvents {
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 6, height: 6)
-            }
-        }
-        .frame(height: 40)
-    }
-
-    private var foregroundColor: Color {
-        if isSelected {
-            return .white
-        } else if isToday {
-            return .blue
-        } else {
-            return .primary
-        }
-    }
-}
-
 // MARK: - 일정 행
-
 struct EventRow: View {
     let event: Event
     @State var viewModel: CalendarViewModel
@@ -328,56 +217,6 @@ struct EventRow: View {
     }
 }
 
-// MARK: - 일정 추가 뷰
-
-struct AddEventView: View {
-    @State var viewModel: CalendarViewModel
-    @State var coordinator: CalendarCoordinator
-    var selectedDate: Date
-
-    @State private var title: String = ""
-    @State private var notes: String = ""
-    @State private var eventDate: Date
-    @State private var eventColor: Color = .blue
-
-    init(viewModel: CalendarViewModel, coordinator: CalendarCoordinator, selectedDate: Date) {
-        self.viewModel = viewModel
-        self.coordinator = coordinator
-        self.selectedDate = selectedDate
-        self._eventDate = State(initialValue: selectedDate)
-    }
-
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("일정 정보")) {
-                    TextField("제목", text: $title)
-                    DatePicker("날짜 및 시간", selection: $eventDate)
-                }
-                Section(header: Text("메모")) {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 100)
-                }
-                Section {
-                    Button("저장하기") {
-                        viewModel.addEvent(title: title, date: eventDate, color: eventColor, notes: notes)
-                        coordinator.dismissAddEvent()
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
-            .navigationTitle("새 일정")
-            .navigationBarItems(
-                leading: Button("취소") {
-                    coordinator.dismissAddEvent()
-                }
-            )
-        }
-    }
+#Preview {
+    CalendarView()
 }
-
-//// MARK: - Preview
-//
-//#Preview {
-//    CalendarView()
-//}
