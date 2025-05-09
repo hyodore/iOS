@@ -8,76 +8,77 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State var viewModel: HomeViewModel
+    @Bindable var viewModel: HomeViewModel
+    
     @State var coordinator: HomeCoordinator
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            VStack {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text("HYODOR")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                    HStack {
-                        Button {
-                            viewModel.didTapCalendar()
-                        } label: {
-                            HomeMenuButton(imageName: "calendar", title: "캘린더")
+            ZStack {
+                Color(red: 0.976, green: 0.976, blue: 0.976).ignoresSafeArea()
+                VStack {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("HYODOR")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            Spacer()
                         }
-                        Button {
-                            viewModel.didTapSharedAlbum()
-                        } label: {
-                            HomeMenuButton(imageName: "camera", title: "공유 앨범")
+                        HStack {
+                            Button { viewModel.didTapCalendar() } label: {
+                                HomeMenuButton(imageName: "calendar", title: "캘린더")
+                            }
+                            Button { viewModel.didTapSharedAlbum() } label: {
+                                HomeMenuButton(imageName: "camera", title: "공유 앨범")
+                            }
                         }
                     }
-                }
-                .padding()
-                VStack(alignment: .leading, spacing: 16) {
-                    // 부모님 일정
-                    SectionHeader(title: "부모님 일정")
-                    VStack(spacing: 0) {
-                        ScheduleRow(iconName: "calendar", title: "회의 일정", date: "9월 21일", time: "10:00 AM")
-                        Divider().padding(.leading, 60)
-                        ScheduleRow(iconName: "calendar", title: "회의 일정", date: "9월 21일", time: "10:00 AM")
-                        Divider().padding(.leading, 60)
-                        ScheduleRow(iconName: "calendar", title: "회의 일정", date: "9월 21일", time: "10:00 AM")
-                        Divider().padding(.leading, 60)
-                        ScheduleRow(iconName: "calendar", title: "가족 저녁 식사", date: "9월 25일", time: "7:00 PM")
-                    }
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .padding()
 
-                    // 이상현상 리스트
-                    HStack {
-                        SectionHeader(title: "이상현상 리스트")
-                        Spacer()
-                        Button("전체 보기") {
-                            viewModel.didTapAlert()
+                    VStack(alignment: .leading, spacing: 16) {
+                        SectionHeader(title: "부모님 일정")
+                        VStack(spacing: 0) {
+                            ForEach(0..<4) { idx in
+                                if idx < viewModel.events.count {
+                                    let event = viewModel.events[idx]
+                                    ScheduleRow(
+                                        iconName: "calendar",
+                                        title: event.title,
+                                        date: event.date.toKoreanDateString(),
+                                        time: event.date.toKoreanTimeString()
+                                    )
+                                } else {
+                                    ScheduleRow(iconName: "calendar", title: "", date: "", time: "")
+                                        .opacity(0)
+                                }
+                            }
                         }
-                        .font(.footnote)
-                        .foregroundColor(.gray)
+                        .background(Color.white)
+                        .cornerRadius(8)
+
+                        HStack {
+                            SectionHeader(title: "이상현상 리스트")
+                            Spacer()
+                            Button("전체 보기") { viewModel.didTapAlert() }
+                                .font(.footnote)
+                                .foregroundColor(.gray)
+                        }
+                        VStack(spacing: 0) {
+                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
+                            AbnormalRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
+                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
+                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
+                        }
+                        .background(Color.white)
+                        .cornerRadius(8)
                     }
-                    VStack(spacing: 0) {
-                        AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
-                        Divider().padding(.leading, 40)
-                        AbnormalRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
-                        Divider().padding(.leading, 40)
-                        AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
-                        Divider().padding(.leading, 40)
-                        AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
-                    }
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
             .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
                 switch route {
                 case .calendar:
-                    CalendarView()
+                    CalendarView(viewModel: viewModel)
                 case .sharedAlbum:
                     SharedAlbumView()
                 case .Alert:
@@ -88,7 +89,25 @@ struct HomeView: View {
     }
 }
 
+
 #Preview {
     let coordinator = HomeCoordinator()
     HomeView(viewModel: HomeViewModel(coordinator: coordinator), coordinator: coordinator)
+}
+
+extension Date {
+    func toKoreanDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월 d일"
+        return formatter.string(from: self)
+    }
+    func toKoreanTimeString() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "a h:mm"
+        formatter.amSymbol = "AM"
+        formatter.pmSymbol = "PM"
+        return formatter.string(from: self)
+    }
 }
