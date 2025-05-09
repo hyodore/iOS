@@ -7,18 +7,16 @@
 
 import SwiftUI
 
-// MARK: - 일정 추가 뷰
 struct AddEventView: View {
-    @State var viewModel: CalendarViewModel
+    @Bindable var viewModel: HomeViewModel
     @State var coordinator: CalendarCoordinator
     var selectedDate: Date
 
     @State private var title: String = ""
     @State private var notes: String = ""
     @State private var eventDate: Date
-    @State private var eventColor: Color = .blue
 
-    init(viewModel: CalendarViewModel, coordinator: CalendarCoordinator, selectedDate: Date) {
+    init(viewModel: HomeViewModel, coordinator: CalendarCoordinator, selectedDate: Date) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         self.selectedDate = selectedDate
@@ -53,4 +51,5 @@ struct AddEventView: View {
         }
     }
 }
+
 

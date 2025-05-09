@@ -13,11 +13,11 @@ import UserNotifications
 @main
 struct ContentView: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    let coordinator = HomeCoordinator()
+    @State var homeViewModel = HomeViewModel(coordinator: HomeCoordinator())
 
     var body: some Scene {
         WindowGroup {
-            HomeView(viewModel: HomeViewModel(coordinator: coordinator), coordinator: coordinator)
+            HomeView(viewModel: homeViewModel, coordinator: homeViewModel.coordinator)
         }
     }
 }

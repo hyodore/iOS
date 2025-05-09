@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CalendarView: View {
-    @State private var viewModel = CalendarViewModel()
+    @Bindable var viewModel: HomeViewModel
     @State private var coordinator = CalendarCoordinator()
 
     private let calendar = Calendar.current
@@ -107,7 +107,9 @@ struct CalendarView: View {
                 ForEach(viewModel.events.filter {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
                 }) { event in
-                    EventRow(event: event, viewModel: viewModel)
+                    EventRow(event: event) {
+                        viewModel.removeEvent(event)
+                    }
                 }
             }
             .listStyle(PlainListStyle())
@@ -172,24 +174,16 @@ struct CalendarView: View {
 // MARK: - 일정 행
 struct EventRow: View {
     let event: Event
-    @State var viewModel: CalendarViewModel
-
-    private var timeFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter
-    }
+    let onDelete: () -> Void
 
     var body: some View {
         HStack {
             Rectangle()
                 .frame(width: 4)
                 .cornerRadius(2)
-
             VStack(alignment: .leading, spacing: 4) {
-                Text(event.title)
-                    .font(.headline)
-                Text(timeFormatter.string(from: event.date))
+                Text(event.title).font(.headline)
+                Text(event.date.toKoreanTimeString())
                     .font(.caption)
                     .foregroundColor(.secondary)
                 if !event.notes.isEmpty {
@@ -200,12 +194,8 @@ struct EventRow: View {
                 }
             }
             .padding(.vertical, 4)
-
             Spacer()
-
-            Button(action: {
-                viewModel.removeEvent(event)
-            }) {
+            Button(action: { onDelete() }) {
                 Image(systemName: "trash")
                     .foregroundColor(.red)
             }
@@ -215,8 +205,4 @@ struct EventRow: View {
         .cornerRadius(8)
         .shadow(color: Color.black.opacity(0.1), radius: 1, x: 0, y: 1)
     }
-}
-
-#Preview {
-    CalendarView()
 }
