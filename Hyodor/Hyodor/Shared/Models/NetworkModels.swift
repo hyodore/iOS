@@ -7,8 +7,6 @@
 
 import Foundation
 
-import Foundation
-
 let baseURL = "http://44.203.156.146:8080"
 let userId  = "user123"
 
