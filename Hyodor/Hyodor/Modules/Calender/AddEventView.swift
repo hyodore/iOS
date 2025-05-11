@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct AddEventView: View {
-    @Bindable var viewModel: HomeViewModel
+    @Bindable var viewModel: HomeVM
     @State var coordinator: CalendarCoordinator
-    var selectedDate: Date
-
     @State private var title: String = ""
     @State private var notes: String = ""
     @State private var eventDate: Date
+    var selectedDate: Date
 
-    init(viewModel: HomeViewModel, coordinator: CalendarCoordinator, selectedDate: Date) {
+    init(viewModel: HomeVM, coordinator: CalendarCoordinator, selectedDate: Date) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         self.selectedDate = selectedDate
@@ -36,7 +35,7 @@ struct AddEventView: View {
                 }
                 Section {
                     Button("저장하기") {
-                        viewModel.addEvent(title: title, date: eventDate, notes: notes)
+                        viewModel.calendarVM.addEvent(title: title, date: eventDate, notes: notes)
                         coordinator.dismissAddEvent()
                     }
                     .disabled(title.isEmpty)

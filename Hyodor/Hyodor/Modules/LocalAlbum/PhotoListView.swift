@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 
 struct PhotoListView: View {
-    @State var viewModel: PhotoListViewModel
+    @State var viewModel: PhotoListVM
     var onUploadComplete: ((UploadCompleteResponse) -> Void)?
 
     private let columns = [

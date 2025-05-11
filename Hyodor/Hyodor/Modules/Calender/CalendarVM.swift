@@ -5,24 +5,21 @@
 //  Created by 김상준 on 4/30/25.
 //
 
-import SwiftUI
+import Foundation
 
 @Observable
-class CalendarViewModel {
-    var events: [Event] = []
+class CalendarVM {
+    var events: [Schedule] = []
     var selectedDate: Date = Date()
-
-    private let baseURL = "http://107.21.85.186:8080"
-    private let userId: String = "user123"
-    private let eventStorage = EventStorage()
+    private let eventStorage = ScheduleStorage()
 
     init() {
-            events = eventStorage.loadEvents()
-        }
+        events = eventStorage.loadEvents()
+    }
 
     // 일정 추가 (서버 업로드 성공시 -> 로컬 데이터 저장)
     func addEvent(title: String, date: Date, notes: String) {
-        let event = Event(id: UUID(), title: title, date: date, notes: notes)
+        let event = Schedule(id: UUID(), title: title, date: date, notes: notes)
         uploadSchedule(event: event) { [weak self] success in
             guard let self = self else { return }
             if success {
@@ -35,7 +32,7 @@ class CalendarViewModel {
     }
 
     // 일정 삭제 (서버 데이터 삭제 성공시 -> 로컬 데이터 삭제)
-    func removeEvent(_ event: Event) {
+    func removeEvent(_ event: Schedule) {
         deleteSchedule(scheduleId: event.id.uuidString) { [weak self] success in
             guard let self = self else { return }
             if success {
@@ -48,26 +45,22 @@ class CalendarViewModel {
     }
 
     // 서버 업로드: 성공 시 true, 실패 시 false return
-    func uploadSchedule(event: Event, completion: @escaping (Bool) -> Void) {
+    func uploadSchedule(event: Schedule, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(baseURL)/api/schedule/upload") else {
             completion(false)
             return
         }
-
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-
         let isoFormatter = ISO8601DateFormatter()
         let scheduleDate = isoFormatter.string(from: event.date)
-
         let body = ScheduleUploadRequest(
             scheduleId: event.id.uuidString,
             userId: userId,
             scheduleDesc: event.title,
             scheduleDate: scheduleDate
         )
-
         do {
             let jsonData = try JSONEncoder().encode(body)
             request.httpBody = jsonData
@@ -76,7 +69,6 @@ class CalendarViewModel {
             completion(false)
             return
         }
-
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("업로드 실패: \(error)")
@@ -98,7 +90,6 @@ class CalendarViewModel {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-
         let body = ScheduleDeleteRequest(scheduleId: scheduleId)
         do {
             let jsonData = try JSONEncoder().encode(body)
@@ -108,7 +99,6 @@ class CalendarViewModel {
             completion(false)
             return
         }
-
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("삭제 실패: \(error)")
@@ -123,5 +113,4 @@ class CalendarViewModel {
             completion(true)
         }.resume()
     }
-
 }

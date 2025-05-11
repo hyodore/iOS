@@ -17,7 +17,6 @@ protocol GalleryUploadServiceProtocol {
 
 // MARK: - 서비스 구현 (async/await)
 class GalleryUploadService: GalleryUploadServiceProtocol {
-    private let baseURL = "http://107.21.85.186:8080"
 
     // 1. Presigned URL 발급 요청
     func requestPresignedURLs(imageInfos: [[String: String]]) async throws -> [PresignedURLResponse] {

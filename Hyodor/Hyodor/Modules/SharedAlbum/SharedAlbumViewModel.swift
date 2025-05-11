@@ -13,9 +13,6 @@ class SharedAlbumViewModel {
     var errorMessage: String?
     private let uploadedPhotoManager = UploadedPhotoManager() // 업로드된 사진 정보 관리 매니저
 
-    private let baseURL = "http://107.21.85.186:8080"
-    private let userId = "user123"
-
     // 서버에서 전체 사진 목록을 동기화
     func syncPhotos() async {
         isLoading = true
