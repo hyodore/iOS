@@ -35,8 +35,10 @@ struct AddEventView: View {
                 }
                 Section {
                     Button("저장하기") {
-                        viewModel.calendarVM.addEvent(title: title, date: eventDate, notes: notes)
-                        coordinator.dismissAddEvent()
+                        Task {
+                            await viewModel.calendarVM.addEvent(title: title, date: eventDate, notes: notes)
+                            coordinator.dismissAddEvent()
+                        }
                     }
                     .disabled(title.isEmpty)
                 }
