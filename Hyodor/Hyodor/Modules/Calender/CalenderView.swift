@@ -109,7 +109,9 @@ struct CalendarView: View {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
                 }) { event in
                     ScheduleRow(schedule: event) {
-                        viewModel.calendarVM.removeEvent(event)
+                        Task {
+                            await viewModel.calendarVM.removeEvent(event)
+                        }
                     }
                 }
             }

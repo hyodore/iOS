@@ -7,6 +7,11 @@
 
 import Foundation
 
+import Foundation
+
+let baseURL = "http://44.203.156.146:8080"
+let userId  = "user123"
+
 // MARK: Presigned URL 발급 응답
 struct PresignedURLResponse: Codable {
     let photoId: String        // 사진 UUID
