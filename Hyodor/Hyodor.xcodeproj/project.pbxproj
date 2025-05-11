@@ -13,6 +13,7 @@
 		07C823792DCCB30B0090B288 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = 07C823782DCCB30B0090B288 /* FirebaseAppCheck */; };
 		07C8237B2DCCB30B0090B288 /* FirebaseAppDistribution-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 07C8237A2DCCB30B0090B288 /* FirebaseAppDistribution-Beta */; };
 		07C8237F2DCCBA210090B288 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 07C8237E2DCCBA210090B288 /* FirebaseMessaging */; };
+		07C824F32DD12D300090B288 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 07C824F22DD12D300090B288 /* .gitignore */; };
 		07F471682DAD0A13004E1818 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 07F471672DAD0A13004E1818 /* Alamofire */; };
 /* End PBXBuildFile section */
 
@@ -34,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		07C824F22DD12D300090B288 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		07F470BB2DACF5B8004E1818 /* Hyodor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hyodor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		07F470CA2DACF5B9004E1818 /* HyodorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HyodorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		07F470D42DACF5B9004E1818 /* HyodorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HyodorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +114,7 @@
 		07F470B22DACF5B8004E1818 = {
 			isa = PBXGroup;
 			children = (
+				07C824F22DD12D300090B288 /* .gitignore */,
 				07F470BD2DACF5B8004E1818 /* Hyodor */,
 				07F470CD2DACF5B9004E1818 /* HyodorTests */,
 				07F470D72DACF5B9004E1818 /* HyodorUITests */,
@@ -261,6 +264,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				07C824F32DD12D300090B288 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
