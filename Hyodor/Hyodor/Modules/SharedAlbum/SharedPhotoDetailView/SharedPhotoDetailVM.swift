@@ -8,7 +8,7 @@
 import SwiftUI
 
 @Observable
-class SharedPhotoDetailViewModel {
+class SharedPhotoDetailVM {
     var image: UIImage?
     var isLoading: Bool  = true
 

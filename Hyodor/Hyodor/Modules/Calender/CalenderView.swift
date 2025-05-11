@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CalendarView: View {
-    @Bindable var viewModel: HomeViewModel
+    @Bindable var viewModel: HomeVM
     @State private var coordinator = CalendarCoordinator()
 
     private let calendar = Calendar.current
@@ -71,14 +71,14 @@ struct CalendarView: View {
             // 캘린더 그리드
             let days = daysInMonth()
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
-                ForEach(days.indices, id: \.self) { index in
+                ForEach(Array(0..<days.count), id: \.self) { index in
                     let date = days[index]
                     if let date = date {
                         CalendarCell(
                             date: date,
                             isSelected: calendar.isDate(date, inSameDayAs: viewModel.selectedDate),
                             isToday: calendar.isDateInToday(date),
-                            hasEvents: viewModel.events.contains { calendar.isDate($0.date, inSameDayAs: date) }
+                            hasEvents: viewModel.calendarVM.events.contains { calendar.isDate($0.date, inSameDayAs: date) }
                         )
                         .onTapGesture {
                             viewModel.selectedDate = date
@@ -90,6 +90,7 @@ struct CalendarView: View {
                     }
                 }
             }
+
 
             // 선택된 날짜
             HStack {
@@ -104,11 +105,11 @@ struct CalendarView: View {
 
             // 일정 목록
             List {
-                ForEach(viewModel.events.filter {
+                ForEach(viewModel.calendarVM.events.filter {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
                 }) { event in
-                    EventRow(event: event) {
-                        viewModel.removeEvent(event)
+                    ScheduleRow(schedule: event) {
+                        viewModel.calendarVM.removeEvent(event)
                     }
                 }
             }
@@ -172,8 +173,8 @@ struct CalendarView: View {
 }
 
 // MARK: - 일정 행
-struct EventRow: View {
-    let event: Event
+struct ScheduleRow: View {
+    let schedule: Schedule
     let onDelete: () -> Void
 
     var body: some View {
@@ -182,12 +183,12 @@ struct EventRow: View {
                 .frame(width: 4)
                 .cornerRadius(2)
             VStack(alignment: .leading, spacing: 4) {
-                Text(event.title).font(.headline)
-                Text(event.date.toKoreanTimeString())
+                Text(schedule.title).font(.headline)
+                Text(schedule.date.toKoreanTimeString())
                     .font(.caption)
                     .foregroundColor(.secondary)
-                if !event.notes.isEmpty {
-                    Text(event.notes)
+                if !schedule.notes.isEmpty {
+                    Text(schedule.notes)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)

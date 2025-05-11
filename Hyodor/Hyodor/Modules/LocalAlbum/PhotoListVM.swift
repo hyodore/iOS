@@ -10,19 +10,18 @@ import Photos
 
 // 사진 업로드를 관리하는 ViewModel
 @Observable
-class PhotoListViewModel {
+class PhotoListVM {
     // 서비스
     private let uploadService: GalleryUploadServiceProtocol
     private let uploadedPhotoManager = UploadedPhotoManager()
 
+    private let userId = "user123"
     var photoAssets: [PhotoAssetModel] = []
     var isUploading = false
     var showingPermissionAlert = false
     var showingDuplicateAlert = false
     var showingUploadSuccess = false
     var uploadSuccessCount = 0
-
-    private let userId = "user123"
 
     init(uploadService: GalleryUploadServiceProtocol = GalleryUploadService()) {
         self.uploadService = uploadService

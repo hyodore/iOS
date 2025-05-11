@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct HomeView: View {
-    @Bindable var viewModel: HomeViewModel
-    
+    @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
             ZStack {
                 Color(red: 0.976, green: 0.976, blue: 0.976).ignoresSafeArea()
+
                 VStack {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
@@ -35,21 +35,38 @@ struct HomeView: View {
                     }
                     .padding()
 
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
                         SectionHeader(title: "부모님 일정")
                         VStack(spacing: 0) {
                             ForEach(0..<4) { idx in
-                                if idx < viewModel.events.count {
-                                    let event = viewModel.events[idx]
-                                    ScheduleRow(
-                                        iconName: "calendar",
+                                if idx < viewModel.displayedEvents.count {
+                                    let event = viewModel.displayedEvents[idx]
+                                    let calendar = Calendar.current
+                                    let now = Date()
+                                    let isToday = calendar.isDate(event.date, inSameDayAs: now)
+                                    let isPast: Bool = {
+                                        if isToday {
+                                            return event.date < now
+                                        } else {
+                                            return event.date < calendar.startOfDay(for: now)
+                                        }
+                                    }()
+                                    EventRow(
                                         title: event.title,
-                                        date: event.date.toKoreanDateString(),
-                                        time: event.date.toKoreanTimeString()
+                                        date: event.date,
+                                        time: event.date.toKoreanTimeString(),
+                                        isPast: isPast,
+                                        isToday: isToday
                                     )
                                 } else {
-                                    ScheduleRow(iconName: "calendar", title: "", date: "", time: "")
-                                        .opacity(0)
+                                    EventRow(
+                                        title: "",
+                                        date: Date(),
+                                        time: "",
+                                        isPast: false,
+                                        isToday: false
+                                    )
+                                    .opacity(0)
                                 }
                             }
                         }
@@ -62,7 +79,7 @@ struct HomeView: View {
                             Button("전체 보기") { viewModel.didTapAlert() }
                                 .font(.footnote)
                                 .foregroundColor(.gray)
-                        }
+                        } // SectionHeader
                         VStack(spacing: 0) {
                             AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
                             AbnormalRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
@@ -78,7 +95,7 @@ struct HomeView: View {
             .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
                 switch route {
                 case .calendar:
-                    CalendarView(viewModel: viewModel)
+                    CalendarView(viewModel: viewModel)  
                 case .sharedAlbum:
                     SharedAlbumView()
                 case .Alert:
@@ -86,28 +103,5 @@ struct HomeView: View {
                 }
             }
         }
-    }
-}
-
-
-#Preview {
-    let coordinator = HomeCoordinator()
-    HomeView(viewModel: HomeViewModel(coordinator: coordinator), coordinator: coordinator)
-}
-
-extension Date {
-    func toKoreanDateString() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월 d일"
-        return formatter.string(from: self)
-    }
-    func toKoreanTimeString() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "a h:mm"
-        formatter.amSymbol = "AM"
-        formatter.pmSymbol = "PM"
-        return formatter.string(from: self)
     }
 }

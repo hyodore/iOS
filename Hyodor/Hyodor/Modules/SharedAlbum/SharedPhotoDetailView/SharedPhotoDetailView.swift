@@ -7,10 +7,10 @@
 import SwiftUI
 
 struct SharedPhotoDetailView: View {
-    @State private var viewModel : SharedPhotoDetailViewModel
+    @State private var viewModel : SharedPhotoDetailVM
 
     init(photo: SharedPhoto){
-        _viewModel = State(wrappedValue: SharedPhotoDetailViewModel(photo: photo))
+        _viewModel = State(wrappedValue: SharedPhotoDetailVM(photo: photo))
     }
 
     var body: some View {

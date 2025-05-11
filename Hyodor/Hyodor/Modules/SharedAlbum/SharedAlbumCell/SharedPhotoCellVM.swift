@@ -8,7 +8,7 @@
 import SwiftUI
 
 @Observable
-class SharedPhotoCellViewModel{
+class SharedPhotoCellVM{
     var image: UIImage?
     var isLoading: Bool = true
 

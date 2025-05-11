@@ -17,15 +17,14 @@ struct HomeMenuButton: View {
                 Image(systemName: imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 32, height: 32)
+                    .frame(width: 24, height: 24)
                     .foregroundColor(.blue)
             }
             Text(title)
                 .font(.footnote)
                 .foregroundColor(.black)
         }
-        .frame(maxWidth: .infinity,minHeight: 90)
-        .padding(8)
+        .frame(maxWidth: .infinity,minHeight: 80)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color(.systemGray4), lineWidth: 1)

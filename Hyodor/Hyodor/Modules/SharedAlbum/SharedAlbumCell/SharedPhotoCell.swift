@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct SharedPhotoCell: View {
-    @State private var viewModel: SharedPhotoCellViewModel
+    @State private var viewModel: SharedPhotoCellVM
     private var cellSize: CGFloat { UIScreen.main.bounds.width / 3 }
 
     init(photo: SharedPhoto) {
-        _viewModel = State(wrappedValue: SharedPhotoCellViewModel(photo: photo))
+        _viewModel = State(wrappedValue: SharedPhotoCellVM(photo: photo))
     }
 
     var body: some View {
