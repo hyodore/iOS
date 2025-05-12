@@ -6,8 +6,8 @@
 //
 
 import Foundation
-// SHA256 해시(파일명 충돌 방지)
 import CryptoKit
+
 extension String {
     func sha256() -> String {
         let data = Data(self.utf8)
