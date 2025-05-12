@@ -5,6 +5,9 @@
 ## User settings
 xcuserdata/
 
+## API 민감 정보
+Core/Constants/APIConstants.swift
+
 ## Obj-C/Swift specific
 *.hmap
 
