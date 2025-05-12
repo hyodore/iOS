@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
+    @State private var selectedSchedule: Schedule? = nil   // 추가
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
@@ -51,13 +52,19 @@ struct HomeView: View {
                                             return event.date < calendar.startOfDay(for: now)
                                         }
                                     }()
-                                    EventRow(
-                                        title: event.title,
-                                        date: event.date,
-                                        time: event.date.toKoreanTimeString(),
-                                        isPast: isPast,
-                                        isToday: isToday
-                                    )
+                                    // EventRow를 버튼으로 감싸기
+                                    Button {
+                                        selectedSchedule = event
+                                    } label: {
+                                        EventRow(
+                                            title: event.title,
+                                            date: event.date,
+                                            time: event.date.toKoreanTimeString(),
+                                            isPast: isPast,
+                                            isToday: isToday
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
                                 } else {
                                     EventRow(
                                         title: "",
@@ -92,10 +99,26 @@ struct HomeView: View {
                     .padding(.horizontal)
                 }
             }
+            // 상세 뷰 네비게이션 연결
+            .sheet(item: $selectedSchedule) { schedule in
+                // 선택된 일정 상세 뷰 표시
+                NavigationStack {
+                    ScheduleDetailView(schedule: schedule)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("닫기") {
+                                    selectedSchedule = nil
+                                }
+                            }
+                        }
+                        .navigationTitle("일정 상세")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+            }
             .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
                 switch route {
                 case .calendar:
-                    CalendarView(viewModel: viewModel)  
+                    CalendarView(viewModel: viewModel)
                 case .sharedAlbum:
                     SharedAlbumView()
                 case .Alert:
