@@ -23,4 +23,29 @@ extension Date {
         formatter.pmSymbol = "PM"
         return formatter.string(from: self)
     }
+
+    // D-Day 텍스트 계산 함수
+    func dDayText(for date: Date) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+        let today = calendar.startOfDay(for: now)
+        let target = calendar.startOfDay(for: date)
+        let diff = calendar.dateComponents([.day], from: today, to: target).day ?? 0
+
+        switch diff {
+        case 0:
+            return "오늘"
+        case -1:
+            return "어제"
+        case 1:
+            return "내일"
+        case let d where d > 0:
+            return "D-\(d)"
+        default:
+            return "D+\(-diff)"
+        }
+    }
 }
+
+
+

@@ -18,8 +18,7 @@ class SharedAlbumViewModel {
         isLoading = true
         defer { isLoading = false } // 메서드 종료시 로딩 상태 해제
 
-        // 1. URL 구성: (baseURL)/api/gallery/all 엔드포인트
-        guard var components = URLComponents(string: "\(APIConstants.baseURL)/api/gallery/all") else {
+        guard var components = URLComponents(string: APIConstants.baseURL + APIConstants.Endpoints.galleryAll) else {
             errorMessage = "잘못된 URL입니다"
             return
         }
@@ -63,8 +62,7 @@ class SharedAlbumViewModel {
         isLoading = true
         // 메서드 종료 시 로딩 상태 해제
         defer { isLoading = false }
-        // 3. URL 구성: (baseURL)/api/gallery/delete 엔드포인트
-        guard let url = URL(string: "\(APIConstants.baseURL)/api/gallery/delete") else {
+        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryDelete) else {
             errorMessage = "잘못된 URL"
             return
         }
