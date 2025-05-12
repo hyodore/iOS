@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ScheduleRow: View {
     let schedule: Schedule
-    let onDelete: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
         HStack {
@@ -30,14 +30,14 @@ struct ScheduleRow: View {
             }
             .padding(.vertical, 4)
             Spacer()
-            Button(action: { onDelete() }) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red)
-            }
         }
         .padding(8)
         .background(Color(.systemBackground))
         .cornerRadius(8)
         .shadow(color: Color.black.opacity(0.1), radius: 1, x: 0, y: 1)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap()
+        }
     }
 }

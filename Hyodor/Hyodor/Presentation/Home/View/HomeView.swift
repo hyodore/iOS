@@ -103,7 +103,15 @@ struct HomeView: View {
             .sheet(item: $selectedSchedule) { schedule in
                 // 선택된 일정 상세 뷰 표시
                 NavigationStack {
-                    ScheduleDetailView(schedule: schedule)
+                    ScheduleDetailView(
+                                schedule: schedule,
+                                onDelete: {
+                                    Task {
+                                        await viewModel.calendarVM.removeEvent(schedule)
+                                        selectedSchedule = nil // 삭제 후 상세 뷰 닫기
+                                    }
+                                }
+                            )
                         .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 Button("닫기") {

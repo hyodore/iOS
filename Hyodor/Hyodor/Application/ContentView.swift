@@ -11,6 +11,7 @@ import SwiftUI
 struct HyodorApp: App {
     let calendarVM = CalendarVM()
     let homeCoordinator = HomeCoordinator()
+    let sharedAlbumViewModel = SharedAlbumViewModel()
 
     @State private var isActive = false
 
@@ -21,8 +22,9 @@ struct HyodorApp: App {
                     viewModel: HomeVM(coordinator: homeCoordinator, calendarVM: calendarVM),
                     coordinator: homeCoordinator
                 )
+                .environment(\.sharedAlbumViewModel, sharedAlbumViewModel)
             } else {
-                SplashView()
+                SplashView(sharedAlbumViewModel: sharedAlbumViewModel)
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                             withAnimation {
@@ -31,7 +33,6 @@ struct HyodorApp: App {
                         }
                     }
             }
-
         }
     }
 }
