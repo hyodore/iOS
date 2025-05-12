@@ -5,6 +5,7 @@
 //  Created by 김상준 on 4/24/25.
 //
 import Foundation
+import SwiftUICore
 
 @Observable
 class SharedAlbumViewModel {
@@ -104,5 +105,17 @@ class SharedAlbumViewModel {
             // 11. 에러 처리: 네트워크 또는 JSON 직렬화 에러
             errorMessage = "삭제 실패: \(error.localizedDescription)"
         }
+    }
+}
+
+// 1. 환경키 및 확장
+private struct SharedAlbumViewModelKey: EnvironmentKey {
+    static let defaultValue: SharedAlbumViewModel = SharedAlbumViewModel()
+}
+
+extension EnvironmentValues {
+    var sharedAlbumViewModel: SharedAlbumViewModel {
+        get { self[SharedAlbumViewModelKey.self] }
+        set { self[SharedAlbumViewModelKey.self] = newValue }
     }
 }

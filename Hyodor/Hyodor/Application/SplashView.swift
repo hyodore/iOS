@@ -10,6 +10,7 @@ import SwiftUI
 struct SplashView: View {
     @State private var size = 0.8
     @State private var opacity = 0.5
+    var sharedAlbumViewModel: SharedAlbumViewModel
 
     var body: some View {
         VStack {
@@ -23,12 +24,13 @@ struct SplashView: View {
                         self.size = 1.0
                         self.opacity = 1.0
                     }
+                    Task {
+                        await sharedAlbumViewModel.syncPhotos()
+                    }
                 }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 0.976, green: 0.976, blue: 0.976))
         .ignoresSafeArea()
-
     }
 }
-

@@ -10,7 +10,7 @@ import SwiftUI
 struct CalendarView: View {
     @Bindable var viewModel: HomeVM
     @State private var coordinator = CalendarCoordinator()
-    @State private var selectedSchedule: Schedule? = nil // 추가: 선택된 일정 상태
+    @State private var selectedSchedule: Schedule? = nil
 
     private let calendar = Calendar.current
     private let dateFormatter = DateFormatter()
@@ -21,7 +21,8 @@ struct CalendarView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    viewModel.selectedDate = Date()}) {
+                    viewModel.selectedDate = Date()
+                }) {
                     Text("오늘")
                         .foregroundColor(.blue)
                         .padding(.horizontal, 12)
@@ -92,7 +93,6 @@ struct CalendarView: View {
                 }
             }
 
-
             // 선택된 날짜
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -109,17 +109,12 @@ struct CalendarView: View {
                 ForEach(viewModel.calendarVM.events.filter {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
                 }) { event in
-                    Button {
-                        // 일정 탭 시 상세 뷰 표시
-                        selectedSchedule = event
-                    } label: {
-                        ScheduleRow(schedule: event) {
-                            Task {
-                                await viewModel.calendarVM.removeEvent(event)
-                            }
+                    ScheduleRow(
+                        schedule: event,
+                        onTap: {
+                            selectedSchedule = event
                         }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                    )
                 }
             }
             .listStyle(PlainListStyle())
@@ -127,18 +122,25 @@ struct CalendarView: View {
         }
         .padding()
         .sheet(item: $selectedSchedule) { schedule in
-            // 선택된 일정 상세 뷰 표시
             NavigationStack {
-                ScheduleDetailView(schedule: schedule)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("닫기") {
-                                selectedSchedule = nil
-                            }
+                ScheduleDetailView(
+                    schedule: schedule,
+                    onDelete: {
+                        Task {
+                            await viewModel.calendarVM.removeEvent(schedule)
+                            selectedSchedule = nil // 삭제 후 상세 뷰 닫기
                         }
                     }
-                    .navigationTitle("일정 상세")
-                    .navigationBarTitleDisplayMode(.inline)
+                )
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("닫기") {
+                            selectedSchedule = nil
+                        }
+                    }
+                }
+                .navigationTitle("일정 상세")
+                .navigationBarTitleDisplayMode(.inline)
             }
         }
         .sheet(isPresented: $coordinator.showAddEvent) {

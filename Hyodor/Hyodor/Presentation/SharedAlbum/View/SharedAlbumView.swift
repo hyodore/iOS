@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct SharedAlbumView: View {
-    @State private var viewModel = SharedAlbumViewModel()
+    @Environment(\.sharedAlbumViewModel) var viewModel
     @State private var showingPhotoList = false
     @State private var selectedPhoto: SharedPhoto? = nil
 
@@ -151,11 +151,12 @@ struct SharedAlbumView: View {
                         })
                     }
                 }
-                .task {
-                    await viewModel.syncPhotos()
-                }
-                .refreshable {
-                    await viewModel.syncPhotos()
+                .onAppear {
+                    if viewModel.photos.isEmpty {
+                        Task {
+                            await viewModel.syncPhotos()
+                        }
+                    }
                 }
                 .alert("오류", isPresented: .constant(viewModel.errorMessage != nil)) {
                     Button("확인", role: .cancel) { viewModel.errorMessage = nil }
