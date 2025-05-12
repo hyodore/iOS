@@ -10,6 +10,7 @@ import SwiftUI
 struct CalendarView: View {
     @Bindable var viewModel: HomeVM
     @State private var coordinator = CalendarCoordinator()
+    @State private var selectedSchedule: Schedule? = nil // 추가: 선택된 일정 상태
 
     private let calendar = Calendar.current
     private let dateFormatter = DateFormatter()
@@ -108,17 +109,38 @@ struct CalendarView: View {
                 ForEach(viewModel.calendarVM.events.filter {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
                 }) { event in
-                    ScheduleRow(schedule: event) {
-                        Task {
-                            await viewModel.calendarVM.removeEvent(event)
+                    Button {
+                        // 일정 탭 시 상세 뷰 표시
+                        selectedSchedule = event
+                    } label: {
+                        ScheduleRow(schedule: event) {
+                            Task {
+                                await viewModel.calendarVM.removeEvent(event)
+                            }
                         }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .listStyle(PlainListStyle())
             Spacer()
         }
         .padding()
+        .sheet(item: $selectedSchedule) { schedule in
+            // 선택된 일정 상세 뷰 표시
+            NavigationStack {
+                ScheduleDetailView(schedule: schedule)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("닫기") {
+                                selectedSchedule = nil
+                            }
+                        }
+                    }
+                    .navigationTitle("일정 상세")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
         .sheet(isPresented: $coordinator.showAddEvent) {
             AddEventView(
                 viewModel: viewModel,
@@ -171,41 +193,5 @@ struct CalendarView: View {
     private func fullDateString(from date: Date) -> String {
         dateFormatter.dateFormat = "yyyy년 M월 d일 EEEE"
         return dateFormatter.string(from: date)
-    }
-}
-
-// MARK: - 일정 행
-struct ScheduleRow: View {
-    let schedule: Schedule
-    let onDelete: () -> Void
-
-    var body: some View {
-        HStack {
-            Rectangle()
-                .frame(width: 4)
-                .cornerRadius(2)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(schedule.title).font(.headline)
-                Text(schedule.date.toKoreanTimeString())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                if !schedule.notes.isEmpty {
-                    Text(schedule.notes)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-            }
-            .padding(.vertical, 4)
-            Spacer()
-            Button(action: { onDelete() }) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red)
-            }
-        }
-        .padding(8)
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-        .shadow(color: Color.black.opacity(0.1), radius: 1, x: 0, y: 1)
     }
 }
