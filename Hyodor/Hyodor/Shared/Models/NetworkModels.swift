@@ -7,7 +7,7 @@
 
 import Foundation
 
-let baseURL = "http://44.203.156.146:8080"
+let baseURL = "http://54.172.64.98:8080"
 let userId  = "user123"
 
 // MARK: Presigned URL 발급 응답
