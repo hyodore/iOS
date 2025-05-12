@@ -11,7 +11,7 @@ class SharedAlbumViewModel {
     var photos: [SharedPhoto] = []  // 공유 앨범의 사진 목록
     var isLoading = false
     var errorMessage: String?
-    private let uploadedPhotoManager = UploadedPhotoManager() // 업로드된 사진 정보 관리 매니저
+    private let uploadedPhotoManager = PhotoStorageService() // 업로드된 사진 정보 관리 매니저
 
     // 서버에서 전체 사진 목록을 동기화
     func syncPhotos() async {
@@ -19,11 +19,11 @@ class SharedAlbumViewModel {
         defer { isLoading = false } // 메서드 종료시 로딩 상태 해제
 
         // 1. URL 구성: (baseURL)/api/gallery/all 엔드포인트
-        guard var components = URLComponents(string: "\(baseURL)/api/gallery/all") else {
+        guard var components = URLComponents(string: "\(APIConstants.baseURL)/api/gallery/all") else {
             errorMessage = "잘못된 URL입니다"
             return
         }
-        components.queryItems = [URLQueryItem(name: "userId", value: userId)]
+        components.queryItems = [URLQueryItem(name: "userId", value: APIConstants.userId)]
         guard let url = components.url else {
             errorMessage = "URL 생성 실패"
             return
@@ -64,13 +64,13 @@ class SharedAlbumViewModel {
         // 메서드 종료 시 로딩 상태 해제
         defer { isLoading = false }
         // 3. URL 구성: (baseURL)/api/gallery/delete 엔드포인트
-        guard let url = URL(string: "\(baseURL)/api/gallery/delete") else {
+        guard let url = URL(string: "\(APIConstants.baseURL)/api/gallery/delete") else {
             errorMessage = "잘못된 URL"
             return
         }
         // 4. POST 요청 바디 생성: userId와 photoIds 포함
         let body = [
-            "userId": userId,
+            "userId": APIConstants.userId,
             "photoIds": photoIds
         ] as [String : Any]
         // 5. POST 요청 설정

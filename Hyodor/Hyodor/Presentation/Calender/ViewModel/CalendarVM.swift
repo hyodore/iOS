@@ -50,7 +50,7 @@ class CalendarVM {
 
     // 서버 업로드: 성공 시 true, 실패 시 false return (async/await 패턴)
     func uploadSchedule(event: Schedule) async throws -> Bool {
-        guard let url = URL(string: "\(baseURL)/api/schedule/upload") else {
+        guard let url = URL(string: "\(APIConstants.baseURL)/api/schedule/upload") else {
             return false
         }
         var request = URLRequest(url: url)
@@ -60,7 +60,7 @@ class CalendarVM {
         let scheduleDate = isoFormatter.string(from: event.date)
         let body = ScheduleUploadRequest(
             scheduleId: event.id.uuidString,
-            userId: userId,
+            userId: APIConstants.userId,
             scheduleDesc: event.title,
             scheduleDate: scheduleDate
         )
@@ -78,7 +78,7 @@ class CalendarVM {
 
     // 서버 삭제: 성공 시 true, 실패 시 false 반환 (async/await 패턴)
     func deleteSchedule(scheduleId: String) async throws -> Bool {
-        guard let url = URL(string: "\(baseURL)/api/schedule/delete") else {
+        guard let url = URL(string: "\(APIConstants.baseURL)/api/schedule/delete") else {
             return false
         }
         var request = URLRequest(url: url)

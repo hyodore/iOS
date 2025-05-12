@@ -8,7 +8,7 @@
 import Foundation
 
 // 업로드된 사진 정보를 관리하는 서비스
-class UploadedPhotoManager {
+class PhotoStorageService {
     private let userDefaults = UserDefaults.standard
     private let uploadedPhotosKey = "uploadedPhotos"
 
