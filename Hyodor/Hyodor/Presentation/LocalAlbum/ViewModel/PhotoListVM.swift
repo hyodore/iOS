@@ -13,7 +13,7 @@ import Photos
 class PhotoListVM {
     // 서비스
     private let uploadService: GalleryUploadServiceProtocol
-    private let uploadedPhotoManager = UploadedPhotoManager()
+    private let uploadedPhotoManager = PhotoStorageService()
 
     private let userId = "user123"
     var photoAssets: [PhotoAssetModel] = []

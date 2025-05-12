@@ -20,7 +20,7 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
 
     // 1. Presigned URL 발급 요청
     func requestPresignedURLs(imageInfos: [[String: String]]) async throws -> [PresignedURLResponse] {
-        guard let url = URL(string: "\(baseURL)/api/gallery/upload/init") else {
+        guard let url = URL(string: "\(APIConstants.baseURL)\(APIConstants.Endpoints.galleryUploadInit)") else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
@@ -63,7 +63,7 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
 
     // 3. 업로드 완료 알림
     func notifyUploadComplete(userId: String, uploadedPhotos: [UploadCompleteRequest.UploadedPhotoInfo]) async throws -> UploadCompleteResponse {
-        guard let url = URL(string: "\(baseURL)/api/gallery/upload/complete") else {
+        guard let url = URL(string: "\(APIConstants.baseURL)\(APIConstants.Endpoints.galleryUploadComplete)") else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
@@ -83,7 +83,7 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
 
     // 4. 사진 동기화 요청
     func syncPhotos(userId: String) async throws -> SyncResponse {
-        guard var components = URLComponents(string: "\(baseURL)/api/gallery/all") else {
+        guard var components = URLComponents(string: "\(APIConstants.baseURL)\(APIConstants.Endpoints.galleryAll)") else {
             throw URLError(.badURL)
         }
         components.queryItems = [URLQueryItem(name: "userId", value: userId)]
