@@ -12,12 +12,26 @@ struct HyodorApp: App {
     let calendarVM = CalendarVM()
     let homeCoordinator = HomeCoordinator()
 
+    @State private var isActive = false
+
     var body: some Scene {
         WindowGroup {
-            HomeView(
-                viewModel: HomeVM(coordinator: homeCoordinator, calendarVM: calendarVM),
-                coordinator: homeCoordinator
-            )
+            if isActive {
+                HomeView(
+                    viewModel: HomeVM(coordinator: homeCoordinator, calendarVM: calendarVM),
+                    coordinator: homeCoordinator
+                )
+            } else {
+                SplashView()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            withAnimation {
+                                self.isActive = true
+                            }
+                        }
+                    }
+            }
+
         }
     }
 }
