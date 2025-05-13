@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct EventRow: View {
+struct HomeScheduleRow: View {
     let title: String
     let date: Date
     let time: String

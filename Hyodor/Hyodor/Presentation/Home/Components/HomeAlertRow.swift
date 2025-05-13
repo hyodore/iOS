@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AbnormalRow: View {
+struct HomeAlertRow: View {
     let icon: String
     let title: String
     let date: String
