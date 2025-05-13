@@ -52,11 +52,10 @@ struct HomeView: View {
                                             return event.date < calendar.startOfDay(for: now)
                                         }
                                     }()
-                                    // EventRow를 버튼으로 감싸기
                                     Button {
                                         selectedSchedule = event
                                     } label: {
-                                        EventRow(
+                                        HomeScheduleRow(
                                             title: event.title,
                                             date: event.date,
                                             time: event.date.toKoreanTimeString(),
@@ -66,7 +65,7 @@ struct HomeView: View {
                                     }
                                     .buttonStyle(.plain)
                                 } else {
-                                    EventRow(
+                                    HomeScheduleRow(
                                         title: "",
                                         date: Date(),
                                         time: "",
@@ -88,10 +87,10 @@ struct HomeView: View {
                                 .foregroundColor(.gray)
                         } // SectionHeader
                         VStack(spacing: 0) {
-                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
-                            AbnormalRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
-                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
-                            AbnormalRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
+                            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
+                            HomeAlertRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
+                            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
+                            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
                         }
                         .background(Color.white)
                         .cornerRadius(8)
