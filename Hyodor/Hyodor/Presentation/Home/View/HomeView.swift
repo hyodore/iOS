@@ -11,6 +11,7 @@ struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
     @State private var selectedSchedule: Schedule? = nil
+    
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
@@ -70,19 +71,18 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 ForEach(0..<4) { idx in
                     if idx < viewModel.displayedEvents.count {
-                        createScheduleButton(for: idx)
+                        scheduleButtonFor(index: idx)
                     } else {
-                        createEmptyScheduleRow()
+                        emptyScheduleRow()
                     }
                 }
             }
-            .background(Color.white)
-            .cornerRadius(8)
+            .containerStyle()
         }
     }
 
     @ViewBuilder
-    private func createScheduleButton(for index: Int) -> some View {
+    private func scheduleButtonFor(index: Int) -> some View {
         let event = viewModel.displayedEvents[index]
         let calendar = Calendar.current
         let now = Date()
@@ -109,7 +109,7 @@ struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private func createEmptyScheduleRow() -> some View {
+    private func emptyScheduleRow() -> some View {
         HomeScheduleRow(
             title: "",
             date: Date(),
@@ -119,6 +119,7 @@ struct HomeView: View {
         )
         .opacity(0)
     }
+
 
     // MARK: - Alert Section
 
@@ -143,8 +144,7 @@ struct HomeView: View {
             HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
             HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
         }
-        .background(Color.white)
-        .cornerRadius(8)
+        .containerStyle()
     }
 
     // MARK: - Navigation
