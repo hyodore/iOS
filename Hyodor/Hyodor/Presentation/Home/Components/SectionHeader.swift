@@ -2,7 +2,7 @@
 //  SectionHeader.swift
 //  Hyodor
 //
-//  Created by 김상준 on 4/28/25.
+//  Created by 김상준 on 5/13/25.
 //
 
 import SwiftUI
