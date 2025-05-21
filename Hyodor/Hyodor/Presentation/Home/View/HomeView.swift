@@ -17,7 +17,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $coordinator.path) {
             ZStack {
-                Color(.systemBackground).ignoresSafeArea() // 밝고 깔끔한 배경
+                Color(.systemBackground).ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -26,7 +26,7 @@ struct HomeView: View {
                     }
                     .padding(.bottom, 20)
                 }
-                .scrollIndicators(.hidden) // 스크롤바 숨김
+                .scrollIndicators(.hidden)
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -51,7 +51,6 @@ struct HomeView: View {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     loadNotifications()
                 }
-                print("새 알림 수신, HomeView 리스트 업데이트 완료")
             }
         }
     }
@@ -60,7 +59,6 @@ struct HomeView: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // "HYODOR" 텍스트는 NavigationBar로 이동했으므로 제거
             HStack(spacing: 16) {
                 Button { viewModel.didTapCalendar() } label: {
                     HomeMenuButton(imageName: "calendar", title: "캘린더")
@@ -73,7 +71,7 @@ struct HomeView: View {
                         .animation(.spring(response: 0.5, dampingFraction: 0.6).delay(0.1), value: animateOnAppear)
                 }
             }
-            .padding(.horizontal, 20) // 좌우 여백 고정
+            .padding(.horizontal, 20)
         }
     }
 
@@ -91,7 +89,6 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "부모님 일정")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-
             VStack(spacing: 8) {
                 ForEach(0..<4) { idx in
                     if idx < viewModel.displayedEvents.count {
@@ -166,43 +163,33 @@ struct HomeView: View {
                         .fill(Color.blue.opacity(0.1))
                 )
             }
-
             alertRowsContainer
         }
     }
 
     private var alertRowsContainer: some View {
         VStack(spacing: 8) {
-            if notifications.isEmpty {
-                // 알림이 없는 경우 빈 행 표시
-                ForEach(0..<4) { _ in
+            let latestNotifications = Array(notifications.prefix(4))
+            ForEach(latestNotifications.indices, id: \.self) { idx in
+                let notification = latestNotifications[idx]
+                Button {
+                    // 알림 클릭 시 상세 뷰로 이동 (AlertView 또는 별도 상세 뷰로 이동 가능)
+                } label: {
+                    HomeAlertRow(
+                        icon: "shield.lefthalf.fill",
+                        title: notification.title,
+                        date: notification.receivedDate,
+                        isRecent: idx == 0
+                    )
+                }
+                .buttonStyle(.plain)
+                .offset(y: animateOnAppear ? 0 : 20)
+                .opacity(animateOnAppear ? 1 : 0)
+                .animation(.easeInOut(duration: 0.4).delay(Double(idx + 4) * 0.1), value: animateOnAppear)
+            }
+            if latestNotifications.count < 4 {
+                ForEach(latestNotifications.count..<4, id: \.self) { _ in
                     emptyAlertRow()
-                }
-            } else {
-                // 최신 4개의 알림 표시
-                ForEach(0..<min(notifications.count, 4)) { index in
-                    let notification = notifications[index]
-                    Button {
-                        // 알림 클릭 시 상세 뷰로 이동 (AlertView 또는 별도 상세 뷰로 이동 가능)
-                        // coordinator.path.append(HomeCoordinator.HomeRoute.Alert) // 예시
-                    } label: {
-                        HomeAlertRow(
-                            icon: "shield.lefthalf.fill",
-                            title: notification.title,
-                            date: notification.receivedDate,
-                            isRecent: index == 0
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .offset(y: animateOnAppear ? 0 : 20)
-                    .opacity(animateOnAppear ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.4).delay(Double(index + 4) * 0.1), value: animateOnAppear)
-                }
-                // 4개 미만일 경우 빈 행으로 채움
-                if notifications.count < 4 {
-                    ForEach(notifications.count..<4) { _ in
-                        emptyAlertRow()
-                    }
                 }
             }
         }
@@ -260,19 +247,11 @@ struct HomeView: View {
         if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
             let decoder = JSONDecoder()
             let loadedNotifications = savedNotifications.compactMap { data in
-                do {
-                    return try decoder.decode(NotificationData.self, from: data)
-                } catch {
-                    print("Failed to decode notification data: \(error)")
-                    return nil
-                }
+                try? decoder.decode(NotificationData.self, from: data)
             }
-            // 최신 순으로 정렬 (receivedDate 기준 내림차순)
             notifications = loadedNotifications.sorted(by: { $0.receivedDate > $1.receivedDate })
-            print("HomeView에 로드된 알림 데이터: \(notifications.count)개")
         } else {
             notifications = []
-            print("UserDefaults에 저장된 알림 데이터가 없습니다.")
         }
     }
 }

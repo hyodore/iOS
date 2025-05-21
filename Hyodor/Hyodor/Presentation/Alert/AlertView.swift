@@ -32,18 +32,14 @@ struct AlertView: View {
                             .padding(.vertical, 8)
                         }
                     }
-                    .onDelete(perform: deleteNotification) // 스와이프 삭제 기능 추가
+                    .onDelete(perform: deleteNotification)
                 }
                 .onAppear(perform: loadNotifications)
                 .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
-                    // 새 알림 수신 시 리스트 업데이트
                     loadNotifications()
-                    print("새 알림 수신, 리스트 업데이트 완료")
                 }
 
-                Button(action: {
-                    sendTestPushRequest()
-                }) {
+                Button(action: sendTestPushRequest) {
                     Text(isLoading ? "요청 중..." : "테스트 푸시 알림 요청")
                         .font(.headline)
                         .foregroundColor(.white)
@@ -69,41 +65,16 @@ struct AlertView: View {
         if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
             let decoder = JSONDecoder()
             notifications = savedNotifications.compactMap { data in
-                do {
-                    return try decoder.decode(NotificationData.self, from: data)
-                } catch {
-                    print("Failed to decode notification data: \(error)")
-                    return nil
-                }
+                try? decoder.decode(NotificationData.self, from: data)
             }
-            // 로드된 알림 데이터를 콘솔에 출력
-            print("로드된 알림 데이터:")
-            for (index, notification) in notifications.enumerated() {
-                print("알림 \(index + 1):")
-                print("  제목: \(notification.title)")
-                print("  내용: \(notification.body)")
-                print("  비디오 URL: \(notification.videoUrl)")
-                print("  사용자 ID: \(notification.userId)")
-                print("  수신 날짜: \(notification.receivedDate)")
-            }
-            if notifications.isEmpty {
-                print("저장된 알림 데이터가 없습니다.")
-            }
-        } else {
-            print("UserDefaults에 저장된 알림 데이터가 없습니다.")
         }
     }
 
     private func deleteNotification(at offsets: IndexSet) {
         notifications.remove(atOffsets: offsets)
-        // UserDefaults에 저장된 데이터도 업데이트
         let encoder = JSONEncoder()
-        do {
-            let encodedData = try notifications.map { try encoder.encode($0) }
+        if let encodedData = try? notifications.map({ try encoder.encode($0) }) {
             UserDefaults.standard.set(encodedData, forKey: "notifications")
-            print("삭제 후 UserDefaults 업데이트 완료")
-        } catch {
-            print("UserDefaults 업데이트 실패: \(error)")
         }
     }
 
@@ -127,7 +98,6 @@ struct AlertView: View {
             let jsonData = try JSONSerialization.data(withJSONObject: body, options: [])
             request.httpBody = jsonData
         } catch {
-            print("JSON 직렬화 오류: \(error)")
             requestResult = "오류: JSON 데이터 생성 실패"
             isLoading = false
             return
@@ -136,12 +106,10 @@ struct AlertView: View {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
-
                 if let error = error {
                     requestResult = "오류: 요청 전송 실패 - \(error.localizedDescription)"
                     return
                 }
-
                 if let response = response as? HTTPURLResponse {
                     if (200...299).contains(response.statusCode) {
                         requestResult = "성공: 서버 응답 코드 \(response.statusCode)"
@@ -164,16 +132,10 @@ struct VideoPlayerView: View {
         if let url = URL(string: videoUrl), videoUrl.lowercased().hasPrefix("http://") || videoUrl.lowercased().hasPrefix("https://") {
             WebView(url: url)
                 .navigationTitle("이벤트 영상")
-                .onAppear {
-                    print("Loading video URL: \(videoUrl)")
-                }
         } else {
             Text("유효하지 않은 영상 URL입니다. URL은 http:// 또는 https://로 시작해야 합니다.")
                 .foregroundColor(.red)
                 .navigationTitle("오류")
-                .onAppear {
-                    print("Invalid video URL: \(videoUrl)")
-                }
         }
     }
 }
@@ -182,12 +144,10 @@ struct WebView: UIViewRepresentable {
     let url: URL
 
     func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        return webView
+        WKWebView()
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        uiView.load(request)
+        uiView.load(URLRequest(url: url))
     }
 }
