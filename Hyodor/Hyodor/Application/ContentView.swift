@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct HyodorApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     let calendarVM = CalendarVM()
     let homeCoordinator = HomeCoordinator()
     let sharedAlbumViewModel = SharedAlbumViewModel()
@@ -36,3 +38,4 @@ struct HyodorApp: App {
         }
     }
 }
+
