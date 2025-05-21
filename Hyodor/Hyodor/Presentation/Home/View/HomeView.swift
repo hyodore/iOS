@@ -11,7 +11,7 @@ struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
     @State private var selectedSchedule: Schedule? = nil
-    
+    @State private var notifications: [NotificationData] = []
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
@@ -28,6 +28,12 @@ struct HomeView: View {
             }
             .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
                 destinationView(for: route)
+            }
+            .onAppear(perform: loadNotifications) // 알림 데이터 로드
+            .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
+                // 새 알림 수신 시 리스트 업데이트
+                loadNotifications()
+                print("새 알림 수신, HomeView 리스트 업데이트 완료")
             }
         }
     }
@@ -120,7 +126,6 @@ struct HomeView: View {
         .opacity(0)
     }
 
-
     // MARK: - Alert Section
 
     private var alertSection: some View {
@@ -139,12 +144,39 @@ struct HomeView: View {
 
     private var alertRowsContainer: some View {
         VStack(spacing: 0) {
-            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 11일 21시 30분")
-            HomeAlertRow(icon: "face.smiling", title: "바닥에 넘어짐", date: "4월 11일 21시 30분", isEmoji: true)
-            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
-            HomeAlertRow(icon: "shield.lefthalf.fill", title: "바닥에 넘어짐", date: "4월 10일 21시 30분")
+            if notifications.isEmpty {
+                // 알림이 없는 경우 빈 행 표시
+                ForEach(0..<4) { _ in
+                    emptyAlertRow()
+                }
+            } else {
+                // 최신 4개의 알림 표시
+                ForEach(0..<min(notifications.count, 4)) { index in
+                    let notification = notifications[index]
+                    HomeAlertRow(
+                        icon: "shield.lefthalf.fill",
+                        title: notification.title,
+                        date: notification.receivedDate.formatted(date: .abbreviated, time: .shortened)
+                    )
+                }
+                // 4개 미만일 경우 빈 행으로 채움
+                if notifications.count < 4 {
+                    ForEach(notifications.count..<4) { _ in
+                        emptyAlertRow()
+                    }
+                }
+            }
         }
         .containerStyle()
+    }
+
+    private func emptyAlertRow() -> some View {
+        HomeAlertRow(
+            icon: "shield.lefthalf.fill",
+            title: "",
+            date: ""
+        )
+        .opacity(0)
     }
 
     // MARK: - Navigation
@@ -181,6 +213,28 @@ struct HomeView: View {
             SharedAlbumView()
         case .Alert:
             AlertView()
+        }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadNotifications() {
+        if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
+            let decoder = JSONDecoder()
+            let loadedNotifications = savedNotifications.compactMap { data in
+                do {
+                    return try decoder.decode(NotificationData.self, from: data)
+                } catch {
+                    print("Failed to decode notification data: \(error)")
+                    return nil
+                }
+            }
+            // 최신 순으로 정렬 (receivedDate 기준 내림차순)
+            notifications = loadedNotifications.sorted(by: { $0.receivedDate > $1.receivedDate })
+            print("HomeView에 로드된 알림 데이터: \(notifications.count)개")
+        } else {
+            notifications = []
+            print("UserDefaults에 저장된 알림 데이터가 없습니다.")
         }
     }
 }
