@@ -10,15 +10,6 @@ import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
 
-// 알림 데이터를 저장하기 위한 구조체
-struct NotificationData: Codable {
-    let title: String
-    let body: String
-    let videoUrl: String
-    let userId: String
-    let receivedDate: Date
-}
-
 // NotificationCenter에 사용할 알림 이름 정의
 extension Notification.Name {
     static let newNotificationReceived = Notification.Name("newNotificationReceived")

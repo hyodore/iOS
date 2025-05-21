@@ -11,7 +11,6 @@ struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
     @State private var selectedSchedule: Schedule? = nil
-    @State private var notifications: [NotificationData] = []
     @State private var animateOnAppear: Bool = false
 
     var body: some View {
@@ -42,14 +41,14 @@ struct HomeView: View {
                 destinationView(for: route)
             }
             .onAppear {
-                loadNotifications()
+                viewModel.loadNotifications()
                 withAnimation(.easeInOut(duration: 0.5)) {
                     animateOnAppear = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    loadNotifications()
+                    viewModel.loadNotifications()
                 }
             }
         }
@@ -169,7 +168,7 @@ struct HomeView: View {
 
     private var alertRowsContainer: some View {
         VStack(spacing: 8) {
-            let latestNotifications = Array(notifications.prefix(4))
+            let latestNotifications = Array(viewModel.notifications.prefix(4))
             ForEach(latestNotifications.indices, id: \.self) { idx in
                 let notification = latestNotifications[idx]
                 Button {
@@ -238,20 +237,6 @@ struct HomeView: View {
             SharedAlbumView()
         case .Alert:
             AlertView()
-        }
-    }
-
-    // MARK: - Data Loading
-
-    private func loadNotifications() {
-        if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
-            let decoder = JSONDecoder()
-            let loadedNotifications = savedNotifications.compactMap { data in
-                try? decoder.decode(NotificationData.self, from: data)
-            }
-            notifications = loadedNotifications.sorted(by: { $0.receivedDate > $1.receivedDate })
-        } else {
-            notifications = []
         }
     }
 }

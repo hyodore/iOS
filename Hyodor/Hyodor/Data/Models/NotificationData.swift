@@ -6,3 +6,11 @@
 //
 
 import Foundation
+
+struct NotificationData: Codable {
+    let title: String
+    let body: String
+    let videoUrl: String
+    let userId: String
+    let receivedDate: Date
+}
