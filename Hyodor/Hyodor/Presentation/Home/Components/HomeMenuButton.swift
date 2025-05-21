@@ -18,16 +18,22 @@ struct HomeMenuButton: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 24, height: 24)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.white)
             }
             Text(title)
-                .font(.footnote)
-                .foregroundColor(.black)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(.primary)
         }
-        .frame(maxWidth: .infinity,minHeight: 80)
+        .frame(maxWidth: .infinity, minHeight: 80)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(.systemGray4), lineWidth: 1)
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.blue.opacity(0.9)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                .cornerRadius(12)
+                .shadow(color: .blue.opacity(0.3), radius: 6, x: 0, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
         )
     }
 }
+
