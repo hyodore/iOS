@@ -156,7 +156,8 @@ struct HomeView: View {
                     HomeAlertRow(
                         icon: "shield.lefthalf.fill",
                         title: notification.title,
-                        date: notification.receivedDate.formatted(date: .abbreviated, time: .shortened)
+                        date: notification.receivedDate, // Date 객체 전달
+                        isRecent: index == 0 // 첫 번째 알림(최신)에만 "최신" 태그 표시
                     )
                 }
                 // 4개 미만일 경우 빈 행으로 채움
@@ -174,7 +175,7 @@ struct HomeView: View {
         HomeAlertRow(
             icon: "shield.lefthalf.fill",
             title: "",
-            date: ""
+            date: Date() // 빈 행에도 Date 객체 전달
         )
         .opacity(0)
     }
