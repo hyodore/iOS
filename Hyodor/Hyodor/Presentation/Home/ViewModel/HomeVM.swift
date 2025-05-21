@@ -11,6 +11,7 @@ import Foundation
 class HomeVM {
     let coordinator: HomeCoordinator
     let calendarVM: CalendarVM
+    var notifications: [NotificationData] = []
 
     var selectedDate: Date = Date()
     var displayedEvents: [Schedule] {
@@ -58,5 +59,18 @@ class HomeVM {
     }
     func didTapAlert() {
         coordinator.showAlert()
+    }
+
+    // FCM 데이터 로드
+    func loadNotifications() {
+        if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
+            let decoder = JSONDecoder()
+            let loadedNotifications = savedNotifications.compactMap { data in
+                try? decoder.decode(NotificationData.self, from: data)
+            }
+            notifications = loadedNotifications.sorted(by: { $0.receivedDate > $1.receivedDate })
+        } else {
+            notifications = []
+        }
     }
 }
