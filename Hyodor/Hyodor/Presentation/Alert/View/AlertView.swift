@@ -59,28 +59,3 @@ struct AlertView: View {
         }
     }
 }
-
-struct VideoPlayerView: View {
-    let videoUrl: String
-
-    var body: some View {
-        if let url = URL(string: videoUrl), videoUrl.lowercased().hasPrefix("http://") || videoUrl.lowercased().hasPrefix("https://") {
-            WebView(url: url)
-        } else {
-            Text("유효하지 않은 영상 URL입니다.")
-                .foregroundColor(.red)
-        }
-    }
-}
-
-struct WebView: UIViewRepresentable {
-    let url: URL
-
-    func makeUIView(context: Context) -> WKWebView {
-        WKWebView()
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        uiView.load(URLRequest(url: url))
-    }
-}
