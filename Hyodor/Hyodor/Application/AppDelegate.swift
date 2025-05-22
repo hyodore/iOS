@@ -79,6 +79,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     // 알림 데이터를 로컬에 저장하는 메서드
     private func saveNotificationData(from userInfo: [AnyHashable: Any]) {
         // videoUrl이 없거나 빈 문자열이면 저장하지 않음
+        print(userInfo)
         guard let videoUrl = userInfo["videoUrl"] as? String, !videoUrl.isEmpty else {
             print("videoUrl이 없는 FCM은 저장하지 않습니다.")
             return
