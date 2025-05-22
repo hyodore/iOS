@@ -78,18 +78,22 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
     // 알림 데이터를 로컬에 저장하는 메서드
     private func saveNotificationData(from userInfo: [AnyHashable: Any]) {
+        // videoUrl이 없거나 빈 문자열이면 저장하지 않음
+        guard let videoUrl = userInfo["videoUrl"] as? String, !videoUrl.isEmpty else {
+            print("videoUrl이 없는 FCM은 저장하지 않습니다.")
+            return
+        }
+
         // notification 페이로드에서 title, body 추출
         let title = userInfo["title"] as? String ?? "알림"
         let body = userInfo["body"] as? String ?? "새로운 메시지가 도착했습니다."
+        let userId = userInfo["userId"] as? String ?? ""
 
-        // data 페이로드에서 videoUrl, userId 추출
+        // notification 페이로드가 있는 경우
         if let aps = userInfo["aps"] as? [String: Any],
            let alert = aps["alert"] as? [String: Any] {
-            // notification 페이로드가 있는 경우
             let title = alert["title"] as? String ?? "알림"
             let body = alert["body"] as? String ?? "새로운 메시지가 도착했습니다."
-            let videoUrl = userInfo["videoUrl"] as? String ?? ""
-            let userId = userInfo["userId"] as? String ?? ""
 
             let notificationData = NotificationData(
                 title: title,
@@ -101,9 +105,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             saveToUserDefaults(notificationData)
         } else {
             // data 페이로드만 있는 경우 (백그라운드 메시지 등)
-            let videoUrl = userInfo["videoUrl"] as? String ?? ""
-            let userId = userInfo["userId"] as? String ?? ""
-
             let notificationData = NotificationData(
                 title: title,
                 body: body,
@@ -114,6 +115,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             saveToUserDefaults(notificationData)
         }
     }
+
 
     // UserDefaults에 저장
     private func saveToUserDefaults(_ data: NotificationData) {
