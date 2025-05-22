@@ -172,7 +172,8 @@ struct HomeView: View {
             ForEach(latestNotifications.indices, id: \.self) { idx in
                 let notification = latestNotifications[idx]
                 Button {
-                    // 알림 클릭 시 상세 뷰로 이동 (AlertView 또는 별도 상세 뷰로 이동 가능)
+                    // 알림 클릭 시 AlertDetail로 이동
+                    coordinator.path.append(HomeCoordinator.HomeRoute.AlertDetail(notification))
                 } label: {
                     HomeAlertRow(
                         icon: "shield.lefthalf.fill",
@@ -193,6 +194,7 @@ struct HomeView: View {
             }
         }
     }
+
 
     private func emptyAlertRow() -> some View {
         HomeAlertRow(
@@ -237,6 +239,8 @@ struct HomeView: View {
             SharedAlbumView()
         case .Alert:
             AlertView()
+        case .AlertDetail(let notification):
+            VideoPlayerView(videoUrl: notification.videoUrl)
         }
     }
 }

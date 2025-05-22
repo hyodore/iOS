@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NotificationData: Codable {
+struct NotificationData: Codable, Hashable {
     let title: String
     let body: String
     let videoUrl: String
