@@ -9,16 +9,15 @@ import SwiftUI
 
 @Observable
 class HomeCoordinator{
-    // 어떤 화면으로 이동할지 상태로 관리
     var path: [HomeRoute] = []
 
     enum HomeRoute: Hashable {
         case calendar
         case sharedAlbum
         case Alert
+        case AlertDetail(NotificationData)
     }
 
-    // 네비게이션 액션
     func showCalendar() {
         path.append(.calendar)
     }
@@ -28,4 +27,8 @@ class HomeCoordinator{
     func showAlert() {
         path.append(.Alert)
     }
+    func showAlertDetail(_ notification: NotificationData) {
+        path.append(HomeRoute.AlertDetail(notification))
+    }
+
 }
