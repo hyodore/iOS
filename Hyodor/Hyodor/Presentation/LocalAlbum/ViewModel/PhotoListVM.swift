@@ -79,7 +79,7 @@ class PhotoListVM {
     }
 
     // MARK: - 선택된 사진 업로드
-    func uploadSelectedPhotos(onComplete: ((UploadCompleteResponse) -> Void)? = nil) async {
+    func uploadSelectedPhotos(onComplete: ((SyncResponseDTO) -> Void)? = nil) async {
         guard hasSelectedPhotos, !isUploading else { return }
         isUploading = true
 
@@ -90,11 +90,11 @@ class PhotoListVM {
 
             // 2. 이미지 변환 및 메타데이터 생성 (병렬 처리)
             var images: [UIImage] = []
-            var imageInfos: [PresignedURLRequestDTO] = []
+            var imageInfos: [ImageUploadRequestDTO] = []
             var assetIds: [String] = []
 
             // TaskGroup으로 병렬 변환
-            try await withThrowingTaskGroup(of: (UIImage, PresignedURLRequestDTO, String).self) { group in
+            try await withThrowingTaskGroup(of: (UIImage, ImageUploadRequestDTO, String).self) { group in
                 for asset in selectedAssets {
                     group.addTask {
                         guard let image = await self.requestUIImage(from: asset) else {
@@ -105,7 +105,7 @@ class PhotoListVM {
                         let fileExtension = self.getImageFileExtension(from: asset)
                         let fileName = "\(id)_\(timestamp).\(fileExtension)"
                         let contentType = fileExtension == "png" ? "image/png" : "image/jpeg"
-                        return (image, PresignedURLRequestDTO(fileName: fileName, contentType: contentType), asset.localIdentifier)
+                        return (image, ImageUploadRequestDTO(fileName: fileName, contentType: contentType), asset.localIdentifier)
                     }
                 }
 
@@ -133,7 +133,7 @@ class PhotoListVM {
             // 5. 업로드 완료 알림
             let now = ISO8601DateFormatter().string(from: Date())
             let uploadedInfos = presignedURLs.enumerated().map { (index, presignedURL) in
-                UploadCompleteRequest.UploadedPhotoInfo(
+                UploadedPhotoInfoDTO(
                     photoId: presignedURL.photoId,
                     photoUrl: presignedURL.photoUrl,
                     uploadAt: now

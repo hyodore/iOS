@@ -10,7 +10,7 @@ import Photos
 
 struct PhotoListView: View {
     @State var viewModel: PhotoListVM
-    var onUploadComplete: ((UploadCompleteResponse) -> Void)?
+    var onUploadComplete: ((SyncResponseDTO) -> Void)?
 
     private let columns = [
         GridItem(.flexible(), spacing: 0),

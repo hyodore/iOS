@@ -21,7 +21,6 @@ struct PhotoAssetModel: Identifiable {
 
 // MARK: - 공유 앨범의 사진 모델 (전체 조회/동기화 등에서 사용)
 struct SharedPhoto: Identifiable, Codable {
-    var id: String { photoId }
     let photoId: String
     let familyId: String
     let photoUrl: String
@@ -29,6 +28,7 @@ struct SharedPhoto: Identifiable, Codable {
     let uploadedAt: String
     let deleted: Bool
     let deletedAt: String?
+    var id: String { photoId }
 
     var imageURL: URL? {
            URL(string: photoUrl)

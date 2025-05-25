@@ -43,7 +43,7 @@ class SharedAlbumViewModel {
                 return
             }
             // 5. JSON 데이터를 SharedPhoto 배열로 디코딩
-            let decoded = try JSONDecoder().decode(AllSyncResponse.self, from: data)
+            let decoded = try JSONDecoder().decode(AllSyncResponseDTO.self, from: data)
 
             // 6. 삭제되지 않은 사진만 필터링하고, 최신순으로 정렬
             self.photos = decoded.photos
