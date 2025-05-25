@@ -60,7 +60,7 @@ import Combine
     }
 
     // 3. 업로드 완료 알림 모의 구현
-    func notifyUploadComplete(userId: String, uploadedPhotos: [UploadCompleteRequest.UploadedPhotoInfo], completion: @escaping (Result<UploadCompleteResponse, Error>) -> Void) {
+    func notifyUploadComplete(userId: String, uploadedPhotos: [UploadCompleteRequest.UploadedPhotoInfoDTO], completion: @escaping (Result<SyncResponseDTO, Error>) -> Void) {
         // 네트워크 지연 시뮬레이션
         DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
             if self.shouldSucceed {
@@ -69,10 +69,10 @@ import Combine
                 let currentTime = dateFormatter.string(from: Date())
 
                 // 모의 응답 생성
-                var newPhotos: [UploadCompleteResponse.PhotoInfo] = []
+                var newPhotos: [SyncResponseDTO.PhotoInfoDTO] = []
 
                 for photo in uploadedPhotos {
-                    let photoInfo = UploadCompleteResponse.PhotoInfo(
+                    let photoInfo = SyncResponseDTO.PhotoInfoDTO(
                         photoId: photo.photoId,
                         familyId: "mock-family-123",
                         photoUrl: photo.photoUrl,
@@ -85,7 +85,7 @@ import Combine
                 }
 
                 // 항상 있는 샘플 사진 추가
-                let alwaysNewPhoto = UploadCompleteResponse.PhotoInfo(
+                let alwaysNewPhoto = SyncResponseDTO.PhotoInfoDTO(
                     photoId: "always_new",
                     familyId: "mock-family-123",
                     photoUrl: "https://mock-s3-bucket.amazonaws.com/photos/sample.jpg",
@@ -97,7 +97,7 @@ import Combine
                 newPhotos.append(alwaysNewPhoto)
 
                 // 삭제된 사진 샘플
-                let deletedPhoto = UploadCompleteResponse.PhotoInfo(
+                let deletedPhoto = SyncResponseDTO.PhotoInfoDTO(
                     photoId: "always_deleted",
                     familyId: "mock-family-123",
                     photoUrl: "https://mock-s3-bucket.amazonaws.com/photos/deleted.jpg",
@@ -107,7 +107,7 @@ import Combine
                     deletedAt: currentTime
                 )
 
-                let response = UploadCompleteResponse(
+                let response = SyncResponseDTO(
                     syncedAt: currentTime,
                     newPhoto: newPhotos,
                     deletedPhoto: [deletedPhoto]
@@ -202,12 +202,12 @@ struct GalleryUploadTests {
         // 테스트 데이터 준비
         let userId = "test-user"
         let uploadedPhotos = [
-            UploadCompleteRequest.UploadedPhotoInfo(
+            UploadCompleteRequest.UploadedPhotoInfoDTO(
                 photoId: "photo-1",
                 photoUrl: "https://example.com/photo-1.jpg",
                 uploadAt: "2023-04-23T12:34:56Z"
             ),
-            UploadCompleteRequest.UploadedPhotoInfo(
+            UploadCompleteRequest.UploadedPhotoInfoDTO(
                 photoId: "photo-2",
                 photoUrl: "https://example.com/photo-2.png",
                 uploadAt: "2023-04-23T12:35:00Z"
@@ -215,7 +215,7 @@ struct GalleryUploadTests {
         ]
 
         // 비동기 결과를 기다리기 위한 continuation 사용
-        let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UploadCompleteResponse, Error>) in
+        let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<SyncResponseDTO, Error>) in
             mockService.notifyUploadComplete(userId: userId, uploadedPhotos: uploadedPhotos) { result in
                 switch result {
                 case .success(let response):

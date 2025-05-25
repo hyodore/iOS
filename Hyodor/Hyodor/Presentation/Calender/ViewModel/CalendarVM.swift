@@ -58,7 +58,7 @@ class CalendarVM {
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
         let isoFormatter = ISO8601DateFormatter()
         let scheduleDate = isoFormatter.string(from: event.date)
-        let body = ScheduleUploadRequest(
+        let body = ScheduleUploadRequestDTO(
             scheduleId: event.id.uuidString,
             userId: APIConstants.userId,
             scheduleDesc: event.title,
@@ -84,7 +84,7 @@ class CalendarVM {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        let body = ScheduleDeleteRequest(scheduleId: scheduleId)
+        let body = ScheduleDeleteRequestDTO(scheduleId: scheduleId)
 
         let jsonData = try JSONEncoder().encode(body)
         request.httpBody = jsonData
