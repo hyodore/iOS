@@ -90,11 +90,11 @@ class PhotoListVM {
 
             // 2. 이미지 변환 및 메타데이터 생성 (병렬 처리)
             var images: [UIImage] = []
-            var imageInfos: [[String: String]] = []
+            var imageInfos: [PresignedURLRequestDTO] = []
             var assetIds: [String] = []
 
             // TaskGroup으로 병렬 변환
-            try await withThrowingTaskGroup(of: (UIImage, [String: String], String).self) { group in
+            try await withThrowingTaskGroup(of: (UIImage, PresignedURLRequestDTO, String).self) { group in
                 for asset in selectedAssets {
                     group.addTask {
                         guard let image = await self.requestUIImage(from: asset) else {
@@ -105,7 +105,7 @@ class PhotoListVM {
                         let fileExtension = self.getImageFileExtension(from: asset)
                         let fileName = "\(id)_\(timestamp).\(fileExtension)"
                         let contentType = fileExtension == "png" ? "image/png" : "image/jpeg"
-                        return (image, ["fileName": fileName, "contentType": contentType], asset.localIdentifier)
+                        return (image, PresignedURLRequestDTO(fileName: fileName, contentType: contentType), asset.localIdentifier)
                     }
                 }
 
