@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - 프로토콜 정의 (async/await)
 protocol GalleryUploadServiceProtocol {
-    func requestPresignedURLs(imageInfos: [[String: String]]) async throws -> [PresignedURLResponse]
+    func requestPresignedURLs(imageInfos: [PresignedURLRequestDTO]) async throws -> [PresignedURLResponse]
     func uploadImageToS3(image: UIImage, presignedURL: PresignedURLResponse) async throws
     func notifyUploadComplete(userId: String, uploadedPhotos: [UploadCompleteRequest.UploadedPhotoInfo]) async throws -> UploadCompleteResponse
     func syncPhotos(userId: String) async throws -> SyncResponse
@@ -18,21 +18,23 @@ protocol GalleryUploadServiceProtocol {
 // MARK: - 서비스 구현 (async/await)
 class GalleryUploadService: GalleryUploadServiceProtocol {
 
-    // 1. Presigned URL 발급 요청
-    func requestPresignedURLs(imageInfos: [[String: String]]) async throws -> [PresignedURLResponse] {
+    func requestPresignedURLs(imageInfos: [PresignedURLRequestDTO]) async throws -> [PresignedURLResponse] {
         guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryUploadInit) else {
             throw URLError(.badURL)
         }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        let jsonData = try JSONSerialization.data(withJSONObject: imageInfos, options: [])
+        let jsonData = try JSONEncoder().encode(imageInfos)
         request.httpBody = jsonData
 
         let (data, response) = try await URLSession.shared.data(for: request)
+
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
+
         let presignedURLs = try JSONDecoder().decode([PresignedURLResponse].self, from: data)
         return presignedURLs
     }

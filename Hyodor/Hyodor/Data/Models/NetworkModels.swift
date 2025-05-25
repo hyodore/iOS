@@ -7,11 +7,17 @@
 
 import Foundation
 
+// MARK: Presigned URL 발급 요청
+struct PresignedURLRequestDTO: Codable {
+    let fileName: String
+    let contentType: String
+}
+
 // MARK: Presigned URL 발급 응답
 struct PresignedURLResponse: Codable {
-    let photoId: String        // 사진 UUID
-    let uploadUrl: String      // S3 Presigned PUT URL
-    let photoUrl: String       // 정적 URL (업로드 후 접근용)
+    let photoId: String
+    let uploadUrl: String
+    let photoUrl: String
 }
 
 // MARK: 업로드 완료 요청
