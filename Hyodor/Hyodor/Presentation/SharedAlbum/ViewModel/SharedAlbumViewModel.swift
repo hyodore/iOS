@@ -43,7 +43,7 @@ class SharedAlbumViewModel {
             self.errorMessage = "네트워크/파싱 오류: \(error.localizedDescription)"
         }
     }
-드
+
     func deletePhotos(photoIds: [String]) async {
         guard !photoIds.isEmpty else { return }
 

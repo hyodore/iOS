@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ScheduleStorage {
+class ScheduleStorageService {
     private let userDefaults = UserDefaults.standard
     private let schedulesKey = "schedules"
 
