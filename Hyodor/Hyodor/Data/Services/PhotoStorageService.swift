@@ -7,12 +7,10 @@
 
 import Foundation
 
-// 업로드된 사진 정보를 관리하는 서비스
 class PhotoStorageService {
     private let userDefaults = UserDefaults.standard
     private let uploadedPhotosKey = "uploadedPhotos"
 
-    // 모든 업로드된 사진 정보 가져오기
     func getAllUploadedPhotos() -> [UploadedLocalPhotoInfo] {
         guard let savedData = userDefaults.array(forKey: uploadedPhotosKey) as? [[String: Any]] else {
             return []
@@ -21,16 +19,13 @@ class PhotoStorageService {
         return savedData.compactMap { UploadedLocalPhotoInfo.fromDictionary($0) }
     }
 
-    // 특정 사진이 업로드되었는지 확인
     func isPhotoUploaded(assetId: String) -> Bool {
         return getAllUploadedPhotos().contains { $0.id == assetId }
     }
 
-    // 업로드된 사진 정보 저장
     func saveUploadedPhoto(_ photo: UploadedLocalPhotoInfo) {
         var savedData = userDefaults.array(forKey: uploadedPhotosKey) as? [[String: Any]] ?? []
 
-        // 이미 있는 경우 업데이트
         if let index = savedData.firstIndex(where: { ($0["id"] as? String) == photo.id }) {
             savedData[index] = photo.toDictionary()
         } else {
@@ -40,21 +35,18 @@ class PhotoStorageService {
         userDefaults.set(savedData, forKey: uploadedPhotosKey)
     }
 
-    // 여러 업로드된 사진 정보 저장
     func saveUploadedPhotos(_ photos: [UploadedLocalPhotoInfo]) {
         for photo in photos {
             saveUploadedPhoto(photo)
         }
     }
 
-    // 업로드된 사진 정보 삭제
     func removeUploadedPhoto(assetId: String) {
         var savedData = userDefaults.array(forKey: uploadedPhotosKey) as? [[String: Any]] ?? []
         savedData.removeAll { ($0["id"] as? String) == assetId }
         userDefaults.set(savedData, forKey: uploadedPhotosKey)
     }
 
-    // 모든 업로드된 사진 정보 삭제
     func clearAllUploadedPhotos() {
         userDefaults.removeObject(forKey: uploadedPhotosKey)
     }

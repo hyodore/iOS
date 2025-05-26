@@ -6,18 +6,15 @@
 //
 
 import SwiftUI
-import WebKit
 
 struct AlertView: View {
-    @State private var notifications: [NotificationData] = []
-    @State private var isLoading = false
-    @State private var requestResult: String = ""
+    @State private var viewModel = AlertViewModel()
 
     var body: some View {
         NavigationView {
             VStack {
                 List {
-                    ForEach(notifications, id: \.receivedDate) { notification in
+                    ForEach(viewModel.notifications, id: \.receivedDate) { notification in
                         NavigationLink(destination: VideoPlayerView(videoUrl: notification.videoUrl)) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(notification.title)
@@ -32,30 +29,16 @@ struct AlertView: View {
                             .padding(.vertical, 8)
                         }
                     }
-                    .onDelete(perform: deleteNotification)
+                    .onDelete(perform: viewModel.deleteNotification)
                 }
-                .onAppear(perform: loadNotifications)
+                .onAppear {
+                    viewModel.loadNotifications()
+                }
                 .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
-                    loadNotifications()
+                    viewModel.loadNotifications()
                 }
             }
-        }
-    }
-
-    private func loadNotifications() {
-        if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
-            let decoder = JSONDecoder()
-            notifications = savedNotifications.compactMap { data in
-                try? decoder.decode(NotificationData.self, from: data)
-            }
-        }
-    }
-
-    private func deleteNotification(at offsets: IndexSet) {
-        notifications.remove(atOffsets: offsets)
-        let encoder = JSONEncoder()
-        if let encodedData = try? notifications.map({ try encoder.encode($0) }) {
-            UserDefaults.standard.set(encodedData, forKey: "notifications")
         }
     }
 }
+

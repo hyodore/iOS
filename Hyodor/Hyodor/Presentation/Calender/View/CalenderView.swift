@@ -59,7 +59,6 @@ struct CalendarView: View {
             }
             .padding(.horizontal)
 
-            // 요일 헤더
             HStack {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
@@ -70,7 +69,6 @@ struct CalendarView: View {
                 }
             }
 
-            // 캘린더 그리드
             let days = daysInMonth()
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
                 ForEach(Array(0..<days.count), id: \.self) { index in
@@ -93,7 +91,6 @@ struct CalendarView: View {
                 }
             }
 
-            // 선택된 날짜
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(fullDateString(from: viewModel.selectedDate))
@@ -104,7 +101,6 @@ struct CalendarView: View {
             }
             .padding(.horizontal)
 
-            // 일정 목록
             List {
                 ForEach(viewModel.calendarVM.events.filter {
                     calendar.isDate($0.date, inSameDayAs: viewModel.selectedDate)
@@ -128,7 +124,7 @@ struct CalendarView: View {
                     onDelete: {
                         Task {
                             await viewModel.calendarVM.removeEvent(schedule)
-                            selectedSchedule = nil // 삭제 후 상세 뷰 닫기
+                            selectedSchedule = nil
                         }
                     }
                 )
@@ -151,7 +147,6 @@ struct CalendarView: View {
         }
     }
 
-    // MARK: - 캘린더 유틸
     private func daysInMonth() -> [Date?] {
         var days = [Date?]()
 

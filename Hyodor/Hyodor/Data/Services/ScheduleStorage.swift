@@ -7,7 +7,6 @@
 
 import Foundation
 
-// MARK: - UserDefaults 저장소
 class ScheduleStorage {
     private let userDefaults = UserDefaults.standard
     private let schedulesKey = "schedules"

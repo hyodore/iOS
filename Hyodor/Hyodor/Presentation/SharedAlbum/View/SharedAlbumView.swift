@@ -11,7 +11,6 @@ struct SharedAlbumView: View {
     @State private var showingPhotoList = false
     @State private var selectedPhoto: SharedPhoto? = nil
 
-    // 선택/삭제 관련 상태
     @State private var isSelectionMode = false
     @State private var selectedPhotoIds: Set<String> = []
 
@@ -45,7 +44,6 @@ struct SharedAlbumView: View {
                     }
                     else {
                         if isSelectionMode {
-                            // 선택 모드 시 선택된 개수 표시
                             HStack {
                                 Text("선택됨: \(selectedPhotoIds.count)개")
                                     .foregroundColor(.blue)
@@ -58,7 +56,6 @@ struct SharedAlbumView: View {
                             LazyVGrid(columns: columns, spacing: 2) {
                                 ForEach(viewModel.photos) { photo in
                                     ZStack(alignment: .topTrailing) {
-                                        // 셀 탭 동작 분기
                                         Group {
                                             if isSelectionMode {
                                                 SharedPhotoCell(photo: photo)
@@ -85,7 +82,6 @@ struct SharedAlbumView: View {
                                                 .buttonStyle(PlainButtonStyle())
                                             }
                                         }
-                                        // 선택 모드일 때 체크마크 표시
                                         if isSelectionMode {
                                             ZStack {
                                                 Circle()
@@ -109,7 +105,6 @@ struct SharedAlbumView: View {
                 }
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
-                        // 선택 모드: 삭제 버튼
                         if isSelectionMode {
                             Button {
                                 
@@ -124,14 +119,12 @@ struct SharedAlbumView: View {
                             }
                             .disabled(selectedPhotoIds.isEmpty)
                         } else {
-                            // 일반 모드: + 버튼
                             Button {
                                 showingPhotoList = true
                             } label: {
                                 Image(systemName: "plus")
                             }
                         }
-                        // 선택/완료 토글 버튼
                         Button {
                             withAnimation {
                                 isSelectionMode.toggle()

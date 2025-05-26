@@ -7,7 +7,6 @@
 
 import Foundation
 
-// MARK: - Coordinator
 @Observable
 class CalendarCoordinator{
     var showAddEvent: Bool = false

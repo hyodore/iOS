@@ -10,9 +10,9 @@ import SwiftUI
 struct HomeAlertRow: View {
     let icon: String
     let title: String
-    let date: Date // Date 타입으로 변경하여 포맷팅 함수 사용
+    let date: Date
     var isEmoji: Bool = false
-    var isRecent: Bool = false // 최신 알림 여부를 표시하기 위한 플래그
+    var isRecent: Bool = false
 
     private var dateString: String {
         date.toKoreanDateString()
@@ -24,9 +24,8 @@ struct HomeAlertRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            // 아이콘 부분
             if isEmoji {
-                Text("😶‍🌫️") // 원하는 이모지로 교체
+                Text("😶‍🌫️")
                     .font(.system(size: 28))
                     .frame(width: 40, height: 36)
                     .background(Color(.systemGray6))
@@ -52,7 +51,6 @@ struct HomeAlertRow: View {
                     .padding(.vertical, 2)
             }
 
-            // 텍스트 부분
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 6) {
                     Text(title)
@@ -76,7 +74,7 @@ struct HomeAlertRow: View {
                     .foregroundColor(.gray)
             }
             Spacer()
-            // 시간 표시 추가
+            
             Text(timeString)
                 .font(.system(size: 16, weight: .light, design: .rounded))
                 .foregroundColor(.primary)
