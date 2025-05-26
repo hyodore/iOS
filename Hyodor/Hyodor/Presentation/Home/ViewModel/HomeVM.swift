@@ -12,8 +12,10 @@ class HomeVM {
     let coordinator: HomeCoordinator
     let calendarVM: CalendarVM
     var notifications: [NotificationData] = []
+    var selectedSchedule: Schedule? = nil
 
     var selectedDate: Date = Date()
+
     var displayedEvents: [Schedule] {
         let now = Date()
         let calendar = Calendar.current
@@ -42,7 +44,7 @@ class HomeVM {
             $0.date < today
         }.sorted { $0.date > $1.date }
 
-        return (todayUpcoming + todayPast + future + past).prefix(4).map { $0 }
+        return Array((todayUpcoming + todayPast + future + past).prefix(4))
     }
 
     init(coordinator: HomeCoordinator, calendarVM: CalendarVM) {
@@ -50,18 +52,44 @@ class HomeVM {
         self.calendarVM = calendarVM
     }
 
-    // 버튼 액션
+    // MARK: - Lifecycle Methods
+
+    func onAppear() {
+        loadNotifications()
+    }
+
+    func onNotificationReceived() {
+        loadNotifications()
+    }
+
+    // MARK: - Button Actions
+
     func didTapCalendar() {
         coordinator.showCalendar()
     }
+
     func didTapSharedAlbum() {
         coordinator.showSharedAlbum()
     }
+
     func didTapAlert() {
         coordinator.showAlert()
     }
 
-    // FCM 데이터 로드
+    func didSelectSchedule(_ schedule: Schedule) {
+        selectedSchedule = schedule
+    }
+
+    func didSelectNotification(_ notification: NotificationData) {
+        coordinator.path.append(HomeCoordinator.HomeRoute.AlertDetail(notification))
+    }
+
+    func dismissScheduleDetail() {
+        selectedSchedule = nil
+    }
+
+    // MARK: - Data Methods
+
     func loadNotifications() {
         if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
             let decoder = JSONDecoder()
@@ -72,5 +100,29 @@ class HomeVM {
         } else {
             notifications = []
         }
+    }
+
+    func getLatestNotifications() -> [NotificationData] {
+        return Array(notifications.prefix(4))
+    }
+
+    func getScheduleStatus(for event: Schedule) -> (isPast: Bool, isToday: Bool) {
+        let calendar = Calendar.current
+        let now = Date()
+        let isToday = calendar.isDate(event.date, inSameDayAs: now)
+        let isPast: Bool = {
+            if isToday {
+                return event.date < now
+            } else {
+                return event.date < calendar.startOfDay(for: now)
+            }
+        }()
+
+        return (isPast: isPast, isToday: isToday)
+    }
+
+    func deleteSchedule(_ schedule: Schedule) async {
+        await calendarVM.removeEvent(schedule)
+        selectedSchedule = nil
     }
 }
