@@ -10,7 +10,6 @@ import SwiftUI
 struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
-    @State private var selectedSchedule: Schedule? = nil
     @State private var animateOnAppear: Bool = false
 
     var body: some View {
@@ -34,22 +33,20 @@ struct HomeView: View {
                         .foregroundColor(.primary)
                 }
             }
-            .sheet(item: $selectedSchedule) { schedule in
+            .sheet(item: $viewModel.selectedSchedule) { schedule in
                 scheduleDetailSheet(for: schedule)
             }
             .navigationDestination(for: HomeCoordinator.HomeRoute.self) { route in
                 destinationView(for: route)
             }
             .onAppear {
-                viewModel.loadNotifications()
+                viewModel.onAppear()
                 withAnimation(.easeInOut(duration: 0.5)) {
                     animateOnAppear = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    viewModel.loadNotifications()
-                }
+                viewModel.onNotificationReceived()
             }
         }
     }
@@ -59,12 +56,16 @@ struct HomeView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
-                Button { viewModel.didTapCalendar() } label: {
+                Button {
+                    viewModel.didTapCalendar()
+                } label: {
                     HomeMenuButton(imageName: "calendar", title: "캘린더")
                         .scaleEffect(animateOnAppear ? 1.0 : 0.8)
                         .animation(.spring(response: 0.5, dampingFraction: 0.6), value: animateOnAppear)
                 }
-                Button { viewModel.didTapSharedAlbum() } label: {
+                Button {
+                    viewModel.didTapSharedAlbum()
+                } label: {
                     HomeMenuButton(imageName: "camera", title: "공유 앨범")
                         .scaleEffect(animateOnAppear ? 1.0 : 0.8)
                         .animation(.spring(response: 0.5, dampingFraction: 0.6).delay(0.1), value: animateOnAppear)
@@ -106,26 +107,17 @@ struct HomeView: View {
     @ViewBuilder
     private func scheduleButtonFor(index: Int) -> some View {
         let event = viewModel.displayedEvents[index]
-        let calendar = Calendar.current
-        let now = Date()
-        let isToday = calendar.isDate(event.date, inSameDayAs: now)
-        let isPast: Bool = {
-            if isToday {
-                return event.date < now
-            } else {
-                return event.date < calendar.startOfDay(for: now)
-            }
-        }()
+        let scheduleStatus = viewModel.getScheduleStatus(for: event)
 
         Button {
-            selectedSchedule = event
+            viewModel.didSelectSchedule(event)
         } label: {
             HomeScheduleRow(
                 title: event.title,
                 date: event.date,
                 time: event.date.toKoreanTimeString(),
-                isPast: isPast,
-                isToday: isToday
+                isPast: scheduleStatus.isPast,
+                isToday: scheduleStatus.isToday
             )
         }
         .buttonStyle(.plain)
@@ -168,12 +160,11 @@ struct HomeView: View {
 
     private var alertRowsContainer: some View {
         VStack(spacing: 8) {
-            let latestNotifications = Array(viewModel.notifications.prefix(4))
+            let latestNotifications = viewModel.getLatestNotifications()
             ForEach(latestNotifications.indices, id: \.self) { idx in
                 let notification = latestNotifications[idx]
                 Button {
-                    // 알림 클릭 시 AlertDetail로 이동
-                    coordinator.path.append(HomeCoordinator.HomeRoute.AlertDetail(notification))
+                    viewModel.didSelectNotification(notification)
                 } label: {
                     HomeAlertRow(
                         icon: "shield.lefthalf.fill",
@@ -195,7 +186,6 @@ struct HomeView: View {
         }
     }
 
-
     private func emptyAlertRow() -> some View {
         HomeAlertRow(
             icon: "shield.lefthalf.fill",
@@ -213,15 +203,14 @@ struct HomeView: View {
                 schedule: schedule,
                 onDelete: {
                     Task {
-                        await viewModel.calendarVM.removeEvent(schedule)
-                        selectedSchedule = nil
+                        await viewModel.deleteSchedule(schedule)
                     }
                 }
             )
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("닫기") {
-                        selectedSchedule = nil
+                        viewModel.dismissScheduleDetail()
                     }
                 }
             }
