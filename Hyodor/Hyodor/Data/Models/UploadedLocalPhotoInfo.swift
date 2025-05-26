@@ -7,11 +7,10 @@
 
 import Foundation
 
-// MARK: - 업로드된 사진 로컬 저장 모델 (UserDefaults 등에서 사용)
 struct UploadedLocalPhotoInfo: Codable, Identifiable {
-    let id: String         // PHAsset의 localIdentifier
-    let photoId: String    // 서버에서 할당한 UUID
-    let photoUrl: String   // S3 URL
+    let id: String
+    let photoId: String
+    let photoUrl: String
     let uploadedAt: Date
 
     func toDictionary() -> [String: Any] {

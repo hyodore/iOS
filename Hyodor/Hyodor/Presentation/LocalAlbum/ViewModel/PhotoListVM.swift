@@ -8,14 +8,12 @@
 import SwiftUI
 import Photos
 
-// 사진 업로드를 관리하는 ViewModel
 @Observable
 class PhotoListVM {
-    // 서비스
-    private let uploadService: GalleryUploadServiceProtocol
-    private let uploadedPhotoManager = PhotoStorageService()
+    // Use Cases 및 Repository 의존성 주입
+    private let photoRepository: PhotoRepository
+    private let galleryRepository: GalleryRepository
 
-    private let userId = "user123"
     var photoAssets: [PhotoAssetModel] = []
     var isUploading = false
     var showingPermissionAlert = false
@@ -23,8 +21,12 @@ class PhotoListVM {
     var showingUploadSuccess = false
     var uploadSuccessCount = 0
 
-    init(uploadService: GalleryUploadServiceProtocol = GalleryUploadService()) {
-        self.uploadService = uploadService
+    init(
+        photoRepository: PhotoRepository = PhotoRepositoryImpl(),
+        galleryRepository: GalleryRepository = GalleryRepositoryImpl()
+    ) {
+        self.photoRepository = photoRepository
+        self.galleryRepository = galleryRepository
     }
 
     var hasSelectedPhotos: Bool {
@@ -49,20 +51,16 @@ class PhotoListVM {
 
     // MARK: - 사진 가져오기
     private func fetchPhotos() {
-        // 1. 사진첩에서 이미지 에셋 가져오기
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
 
-        // 2. 에셋을 PhotoAssetModel로 변환
         var assets: [PhotoAssetModel] = []
         fetchResult.enumerateObjects { asset, _, _ in
-            // 변수 이름 수정: is Uploade → isUploaded
-            let isUploaded = self.uploadedPhotoManager.isPhotoUploaded(assetId: asset.localIdentifier)
+            let isUploaded = self.photoRepository.isPhotoUploaded(assetId: asset.localIdentifier)
             assets.append(PhotoAssetModel(asset: asset, isSelected: false, isUploaded: isUploaded))
         }
 
-        // 3. 메인 스레드에서 상태 업데이트
         DispatchQueue.main.async {
             self.photoAssets = assets
         }
@@ -71,7 +69,7 @@ class PhotoListVM {
     // MARK: - 사진 탭 처리
     func handleTap(assetId: String) {
         guard let index = photoAssets.firstIndex(where: { $0.id == assetId }) else { return }
-        if photoAssets[index].isUploaded || uploadedPhotoManager.isPhotoUploaded(assetId: assetId) {
+        if photoAssets[index].isUploaded || photoRepository.isPhotoUploaded(assetId: assetId) {
             showingDuplicateAlert = true
         } else {
             photoAssets[index].isSelected.toggle()
@@ -84,11 +82,9 @@ class PhotoListVM {
         isUploading = true
 
         do {
-            // 1. 선택된 에셋
             let selectedAssetModels = photoAssets.filter { $0.isSelected }
             let selectedAssets = selectedAssetModels.map { $0.asset }
 
-            // 2. 이미지 변환 및 메타데이터 생성 (병렬 처리)
             var images: [UIImage] = []
             var imageInfos: [ImageUploadRequestDTO] = []
             var assetIds: [String] = []
@@ -109,7 +105,6 @@ class PhotoListVM {
                     }
                 }
 
-                // 변환 결과 수집
                 for try await (image, info, assetId) in group {
                     images.append(image)
                     imageInfos.append(info)
@@ -117,20 +112,20 @@ class PhotoListVM {
                 }
             }
 
-            // 3. Presigned URL 요청
-            let presignedURLs = try await uploadService.requestPresignedURLs(imageInfos: imageInfos)
+            // Presigned URL 요청
+            let presignedURLs = try await galleryRepository.requestPresignedURLs(imageInfos: imageInfos)
 
-            // 4. S3 업로드 (병렬 처리)
+            // S3 업로드 (병렬 처리)
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for (index, presignedURL) in presignedURLs.enumerated() where index < images.count {
                     group.addTask {
-                        try await self.uploadService.uploadImageToS3(image: images[index], presignedURL: presignedURL)
+                        try await self.galleryRepository.uploadImageToS3(image: images[index], presignedURL: presignedURL)
                     }
                 }
                 try await group.waitForAll()
             }
 
-            // 5. 업로드 완료 알림
+            // 업로드 완료 알림
             let now = ISO8601DateFormatter().string(from: Date())
             let uploadedInfos = presignedURLs.enumerated().map { (index, presignedURL) in
                 UploadedPhotoInfoDTO(
@@ -139,9 +134,9 @@ class PhotoListVM {
                     uploadAt: now
                 )
             }
-            let response = try await uploadService.notifyUploadComplete(userId: userId, uploadedPhotos: uploadedInfos)
+            let response = try await galleryRepository.notifyUploadComplete(userId: APIConstants.userId, uploadedPhotos: uploadedInfos)
 
-            // 6. 상태 및 로컬 정보 갱신
+            // 상태 및 로컬 정보 갱신
             let uploadedPhotoIds = Set(response.newPhoto.map { $0.photoId })
             for (index, assetId) in assetIds.enumerated() {
                 if index < presignedURLs.count,
@@ -155,7 +150,7 @@ class PhotoListVM {
                         photoUrl: presignedURLs[index].photoUrl,
                         uploadedAt: Date()
                     )
-                    uploadedPhotoManager.saveUploadedPhoto(uploadedPhoto)
+                    photoRepository.saveUploadedPhoto(uploadedPhoto)
                 }
             }
             uploadSuccessCount = uploadedPhotoIds.count
@@ -163,19 +158,18 @@ class PhotoListVM {
             onComplete?(response)
         } catch {
             print("업로드 실패: \(error.localizedDescription)")
-            // 사용자에게 에러 알림 (예: self.errorMessage = "업로드 실패: \(error.localizedDescription)")
         }
         isUploading = false
     }
 
     // MARK: - PHAsset → UIImage 비동기 변환 (최적화)
     private func requestUIImage(from asset: PHAsset) async -> UIImage? {
-        let targetSize = CGSize(width: 1920, height: 1080) // 최대 1080p로 리사이징
+        let targetSize = CGSize(width: 1920, height: 1080)
         let options = PHImageRequestOptions()
         options.isSynchronous = false
         options.deliveryMode = .highQualityFormat
-        options.resizeMode = .fast // 빠른 리사이징
-        options.isNetworkAccessAllowed = false // iCloud 다운로드 비활성화 (로컬 우선)
+        options.resizeMode = .fast
+        options.isNetworkAccessAllowed = false
         options.normalizedCropRect = CGRect(x: 0, y: 0, width: 1, height: 1)
 
         return await withCheckedContinuation { continuation in
@@ -185,7 +179,6 @@ class PhotoListVM {
                 contentMode: .aspectFit,
                 options: options
             ) { image, _ in
-                // JPEG 압축 적용
                 if let image = image,
                    let data = image.jpegData(compressionQuality: 0.8),
                    let compressedImage = UIImage(data: data) {

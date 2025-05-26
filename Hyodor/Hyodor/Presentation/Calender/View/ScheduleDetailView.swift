@@ -13,7 +13,6 @@ struct ScheduleDetailView: View {
 
     var body: some View {
         VStack {
-            // 상단 콘텐츠
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     Text(schedule.title)

@@ -24,7 +24,6 @@ extension Date {
         return formatter.string(from: self)
     }
 
-    // D-Day 텍스트 계산 함수
     func dDayText(for date: Date) -> String {
         let calendar = Calendar.current
         let now = Date()

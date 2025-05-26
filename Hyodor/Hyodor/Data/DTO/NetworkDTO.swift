@@ -53,7 +53,7 @@ struct PhotoInfoDTO: Codable {
 
 /// 전체 사진 조회 응답 (갤러리 전체 사진 목록)
 struct AllSyncResponseDTO: Codable {
-    let photos: [SharedPhoto]
+    let photos: [PhotoInfoDTO]
 }
 
 /// 사진 삭제 요청 (선택한 사진들 삭제)

@@ -13,46 +13,39 @@ class HomeVM {
     let calendarVM: CalendarVM
     var notifications: [NotificationData] = []
     var selectedSchedule: Schedule? = nil
-
     var selectedDate: Date = Date()
 
+    private let getDisplayedSchedulesUseCase: GetDisplayedSchedulesUseCase
+    private let getLatestNotificationsUseCase: GetLatestNotificationsUseCase
+    private let deleteScheduleUseCase: DeleteScheduleUseCase
+    private let notificationRepository: NotificationRepository
+
     var displayedEvents: [Schedule] {
-        let now = Date()
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: now)
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-
-        let events = calendarVM.events
-
-        // 1. 오늘 아직 하지 않은 일 (오늘이고, 현재 시간 이후)
-        let todayUpcoming = events.filter {
-            calendar.isDate($0.date, inSameDayAs: now) && $0.date >= now
-        }.sorted { $0.date < $1.date }
-
-        // 2. 오늘 이미 지난 일 (오늘이고, 현재 시간 이전)
-        let todayPast = events.filter {
-            calendar.isDate($0.date, inSameDayAs: now) && $0.date < now
-        }.sorted { $0.date < $1.date }
-
-        // 3. 내일부터 미래 일정 (내일 이후, 오름차순)
-        let future = events.filter {
-            $0.date >= tomorrow
-        }.sorted { $0.date < $1.date }
-
-        // 4. 가장 최근에 완료한 일정 (오늘 이전, 내림차순)
-        let past = events.filter {
-            $0.date < today
-        }.sorted { $0.date > $1.date }
-
-        return Array((todayUpcoming + todayPast + future + past).prefix(4))
+        return getDisplayedSchedulesUseCase.execute()
     }
 
-    init(coordinator: HomeCoordinator, calendarVM: CalendarVM) {
+    init(
+        coordinator: HomeCoordinator,
+        calendarVM: CalendarVM = CalendarVM(),
+        getDisplayedSchedulesUseCase: GetDisplayedSchedulesUseCase = GetDisplayedSchedulesUseCaseImpl(
+            scheduleRepository: ScheduleRepositoryImpl()
+        ),
+        getLatestNotificationsUseCase: GetLatestNotificationsUseCase = GetLatestNotificationsUseCaseImpl(
+            notificationRepository: NotificationRepositoryImpl()
+        ),
+        deleteScheduleUseCase: DeleteScheduleUseCase = DeleteScheduleUseCaseImpl(
+            scheduleRepository: ScheduleRepositoryImpl(),
+            scheduleNetworkService: ScheduleNetworkServiceImpl()
+        ),
+        notificationRepository: NotificationRepository = NotificationRepositoryImpl()
+    ) {
         self.coordinator = coordinator
         self.calendarVM = calendarVM
+        self.getDisplayedSchedulesUseCase = getDisplayedSchedulesUseCase
+        self.getLatestNotificationsUseCase = getLatestNotificationsUseCase
+        self.deleteScheduleUseCase = deleteScheduleUseCase
+        self.notificationRepository = notificationRepository
     }
-
-    // MARK: - Lifecycle Methods
 
     func onAppear() {
         loadNotifications()
@@ -61,8 +54,6 @@ class HomeVM {
     func onNotificationReceived() {
         loadNotifications()
     }
-
-    // MARK: - Button Actions
 
     func didTapCalendar() {
         coordinator.showCalendar()
@@ -88,22 +79,12 @@ class HomeVM {
         selectedSchedule = nil
     }
 
-    // MARK: - Data Methods
-
     func loadNotifications() {
-        if let savedNotifications = UserDefaults.standard.array(forKey: "notifications") as? [Data] {
-            let decoder = JSONDecoder()
-            let loadedNotifications = savedNotifications.compactMap { data in
-                try? decoder.decode(NotificationData.self, from: data)
-            }
-            notifications = loadedNotifications.sorted(by: { $0.receivedDate > $1.receivedDate })
-        } else {
-            notifications = []
-        }
+        notifications = notificationRepository.getNotifications()
     }
 
     func getLatestNotifications() -> [NotificationData] {
-        return Array(notifications.prefix(4))
+        return getLatestNotificationsUseCase.execute()
     }
 
     func getScheduleStatus(for event: Schedule) -> (isPast: Bool, isToday: Bool) {
@@ -122,7 +103,12 @@ class HomeVM {
     }
 
     func deleteSchedule(_ schedule: Schedule) async {
-        await calendarVM.removeEvent(schedule)
-        selectedSchedule = nil
+        do {
+            try await deleteScheduleUseCase.execute(schedule)
+            selectedSchedule = nil
+            calendarVM.loadEvents()
+        } catch {
+            print("일정 삭제 실패: \(error.localizedDescription)")
+        }
     }
 }

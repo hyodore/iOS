@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// MARK: - 프로토콜 정의 (async/await)
 protocol GalleryUploadServiceProtocol {
     func requestPresignedURLs(imageInfos: [ImageUploadRequestDTO]) async throws -> [PresignedURLResponseDTO]
     func uploadImageToS3(image: UIImage, presignedURL: PresignedURLResponseDTO) async throws
@@ -15,7 +14,6 @@ protocol GalleryUploadServiceProtocol {
     func syncPhotos(userId: String) async throws -> SyncResponseDTO
 }
 
-// MARK: - 서비스 구현 (async/await)
 class GalleryUploadService: GalleryUploadServiceProtocol {
 
     func requestPresignedURLs(imageInfos: [ImageUploadRequestDTO]) async throws -> [PresignedURLResponseDTO] {
@@ -39,7 +37,6 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
         return presignedURLs
     }
 
-    // 2. S3에 이미지 업로드
     func uploadImageToS3(image: UIImage, presignedURL: PresignedURLResponseDTO) async throws {
         guard let uploadURL = URL(string: presignedURL.uploadUrl) else {
             throw URLError(.badURL)
@@ -63,7 +60,6 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
         }
     }
 
-    // 3. 업로드 완료 알림
     func notifyUploadComplete(userId: String, uploadedPhotos: [UploadedPhotoInfoDTO]) async throws -> SyncResponseDTO {
         guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryUploadComplete) else {
             throw URLError(.badURL)
@@ -83,7 +79,6 @@ class GalleryUploadService: GalleryUploadServiceProtocol {
         return uploadCompleteResponse
     }
 
-    // 4. 사진 동기화 요청
     func syncPhotos(userId: String) async throws -> SyncResponseDTO {
         guard var components = URLComponents(string: APIConstants.baseURL + APIConstants.Endpoints.galleryAll) else {
             throw URLError(.badURL)

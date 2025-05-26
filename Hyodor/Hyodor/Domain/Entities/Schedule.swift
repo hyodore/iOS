@@ -13,3 +13,4 @@ struct Schedule: Codable, Identifiable {
     var date: Date
     var notes: String
 }
+

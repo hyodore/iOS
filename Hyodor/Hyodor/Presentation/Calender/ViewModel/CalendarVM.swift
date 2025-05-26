@@ -11,90 +11,49 @@ import Foundation
 class CalendarVM {
     var events: [Schedule] = []
     var selectedDate: Date = Date()
-    private let eventStorage = ScheduleStorage()
 
-    init() {
-        events = eventStorage.loadEvents()
+    private let getSchedulesUseCase: GetSchedulesUseCase
+    private let addScheduleUseCase: AddScheduleUseCase
+    private let deleteScheduleUseCase: DeleteScheduleUseCase
+
+    init(
+        getSchedulesUseCase: GetSchedulesUseCase = GetSchedulesUseCaseImpl(
+            scheduleRepository: ScheduleRepositoryImpl()
+        ),
+        addScheduleUseCase: AddScheduleUseCase = AddScheduleUseCaseImpl(
+            scheduleRepository: ScheduleRepositoryImpl(),
+            scheduleNetworkService: ScheduleNetworkServiceImpl()
+        ),
+        deleteScheduleUseCase: DeleteScheduleUseCase = DeleteScheduleUseCaseImpl(
+            scheduleRepository: ScheduleRepositoryImpl(),
+            scheduleNetworkService: ScheduleNetworkServiceImpl()
+        )
+    ) {
+        self.getSchedulesUseCase = getSchedulesUseCase
+        self.addScheduleUseCase = addScheduleUseCase
+        self.deleteScheduleUseCase = deleteScheduleUseCase
+        loadEvents()
     }
 
-    // 일정 추가 (서버 업로드 성공시 -> 로컬 데이터 저장)
+    func loadEvents() {
+        events = getSchedulesUseCase.execute()
+    }
+
     func addEvent(title: String, date: Date, notes: String) async {
-        let event = Schedule(id: UUID(), title: title, date: date, notes: notes)
         do {
-            let success = try await uploadSchedule(event: event)
-            if success {
-                self.events.append(event)
-                self.eventStorage.saveEvents(self.events)
-            } else {
-                print("서버 업로드 실패")
-            }
+            try await addScheduleUseCase.execute(title: title, date: date, notes: notes)
+            loadEvents()
         } catch {
-            print("업로드 실패: \(error.localizedDescription)")
+            print("일정 추가 실패: \(error.localizedDescription)")
         }
     }
 
-    // 일정 삭제 (서버 데이터 삭제 성공시 -> 로컬 데이터 삭제)
     func removeEvent(_ event: Schedule) async {
         do {
-            let success = try await deleteSchedule(scheduleId: event.id.uuidString)
-            if success {
-                self.events.removeAll { $0.id == event.id }
-                self.eventStorage.saveEvents(self.events)
-            } else {
-                print("서버 삭제 실패")
-            }
+            try await deleteScheduleUseCase.execute(event)
+            loadEvents()
         } catch {
-            print("삭제 실패: \(error.localizedDescription)")
+            print("일정 삭제 실패: \(error.localizedDescription)")
         }
     }
-
-    // 서버 업로드: 성공 시 true, 실패 시 false return (async/await 패턴)
-    func uploadSchedule(event: Schedule) async throws -> Bool {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.scheduleUpload) else {
-            return false
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        let isoFormatter = ISO8601DateFormatter()
-        let scheduleDate = isoFormatter.string(from: event.date)
-        let body = ScheduleUploadRequestDTO(
-            scheduleId: event.id.uuidString,
-            userId: APIConstants.userId,
-            scheduleDesc: event.title,
-            scheduleDate: scheduleDate
-        )
-
-        let jsonData = try JSONEncoder().encode(body)
-        request.httpBody = jsonData
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            return false
-        }
-        return true
-    }
-
-    // 서버 삭제: 성공 시 true, 실패 시 false 반환 (async/await 패턴)
-    func deleteSchedule(scheduleId: String) async throws -> Bool {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.scheduleDelete) else {
-            return false
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        let body = ScheduleDeleteRequestDTO(scheduleId: scheduleId)
-
-        let jsonData = try JSONEncoder().encode(body)
-        request.httpBody = jsonData
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            return false
-        }
-        return true
-    }
-
 }
