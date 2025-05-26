@@ -8,9 +8,9 @@
 import Foundation
 
 class ScheduleRepositoryImpl: ScheduleRepository {
-    private let scheduleStorage: ScheduleStorage
+    private let scheduleStorage: ScheduleStorageService
 
-    init(scheduleStorage: ScheduleStorage = ScheduleStorage()) {
+    init(scheduleStorage: ScheduleStorageService = ScheduleStorageService()) {
         self.scheduleStorage = scheduleStorage
     }
 

@@ -24,10 +24,8 @@ class DeletePhotosUseCaseImpl: DeletePhotosUseCase {
     }
 
     func execute(userId: String, photoIds: [String]) async throws {
-        // 1. 서버에서 사진 삭제
         try await sharedPhotoRepository.deletePhotos(userId: userId, photoIds: photoIds)
 
-        // 2. 로컬 업로드 정보 삭제
         let uploadedPhotos = photoRepository.getAllUploadedPhotos()
         let toRemoveAssetIds = uploadedPhotos
             .filter { photoIds.contains($0.photoId) }
