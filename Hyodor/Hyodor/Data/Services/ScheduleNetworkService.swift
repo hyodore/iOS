@@ -22,8 +22,13 @@ class ScheduleNetworkServiceImpl: ScheduleNetworkService {
         request.httpMethod = "POST"
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
 
-        let isoFormatter = ISO8601DateFormatter()
-        let scheduleDate = isoFormatter.string(from: schedule.date)
+        let outputFormatter = DateFormatter()
+        outputFormatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        outputFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        outputFormatter.locale = Locale(identifier: "en_US_POSIX")
+
+        let scheduleDate = outputFormatter.string(from: schedule.date)
+
         let body = ScheduleUploadRequestDTO(
             scheduleId: schedule.id.uuidString,
             userId: APIConstants.userId,

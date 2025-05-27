@@ -11,6 +11,7 @@ struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
     @State private var animateOnAppear: Bool = false
+    @State private var refreshTrigger = false
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
@@ -41,17 +42,24 @@ struct HomeView: View {
             }
             .onAppear {
                 viewModel.onAppear()
+                viewModel.loadNotifications()
                 withAnimation(.easeInOut(duration: 0.5)) {
                     animateOnAppear = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
+                refreshTrigger.toggle()
                 viewModel.onNotificationReceived()
+            }
+            .onChange(of: refreshTrigger) {
+                DispatchQueue.main.async {
+                    viewModel.loadNotifications()
+                }
             }
         }
     }
 
-    // MARK: - UI Sections
+    // MARK: - UI Sections (기존 코드 그대로)
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
