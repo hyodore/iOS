@@ -5,8 +5,7 @@
 //  Created by 김상준 on 4/24/25.
 //
 
-import Foundation
-import SwiftUICore
+import SwiftUI
 
 @Observable
 class SharedAlbumViewModel {
