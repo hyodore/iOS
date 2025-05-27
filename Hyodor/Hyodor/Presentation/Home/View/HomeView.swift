@@ -43,11 +43,13 @@ struct HomeView: View {
             .onAppear {
                 viewModel.onAppear()
                 viewModel.loadNotifications()
+
                 withAnimation(.easeInOut(duration: 0.5)) {
                     animateOnAppear = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
+
                 refreshTrigger.toggle()
                 viewModel.onNotificationReceived()
             }

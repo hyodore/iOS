@@ -41,7 +41,6 @@ class CalendarVM {
 
     func addEvent(title: String, date: Date, notes: String) async {
 
-        
         do {
             try await addScheduleUseCase.execute(title: title, date: date, notes: notes)
             loadEvents()
