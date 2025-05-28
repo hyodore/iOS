@@ -19,8 +19,8 @@ extension Date {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "a h:mm"
-        formatter.amSymbol = "AM"
-        formatter.pmSymbol = "PM"
+        formatter.amSymbol = "오전"
+        formatter.pmSymbol = "오후"
         return formatter.string(from: self)
     }
 

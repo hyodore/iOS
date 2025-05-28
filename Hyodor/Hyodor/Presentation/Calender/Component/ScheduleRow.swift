@@ -17,12 +17,15 @@ struct ScheduleRow: View {
                 .frame(width: 4)
                 .cornerRadius(2)
             VStack(alignment: .leading, spacing: 4) {
-                Text(schedule.title).font(.headline)
+                Text(schedule.title)
+                    .font(.headline)
+
                 Text(schedule.date.toKoreanTimeString())
                     .font(.caption)
                     .foregroundColor(.secondary)
-                if !schedule.notes.isEmpty {
-                    Text(schedule.notes)
+
+                if ((schedule.notes?.isEmpty) == nil) {
+                    Text(schedule.notes ?? "")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)

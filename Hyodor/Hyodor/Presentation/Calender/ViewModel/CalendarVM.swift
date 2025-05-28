@@ -39,10 +39,9 @@ class CalendarVM {
         events = getSchedulesUseCase.execute()
     }
 
-    func addEvent(title: String, date: Date, notes: String) async {
-
+    func addEvent(title: String, date: Date, notes: String?, audioFileURL: URL? = nil) async {
         do {
-            try await addScheduleUseCase.execute(title: title, date: date, notes: notes)
+            try await addScheduleUseCase.execute(title: title, date: date, notes: notes, audioFileURL: audioFileURL)
             loadEvents()
         } catch {
             print("일정 추가 실패: \(error.localizedDescription)")

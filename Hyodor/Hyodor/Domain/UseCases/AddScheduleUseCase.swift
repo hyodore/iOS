@@ -8,7 +8,7 @@
 import Foundation
 
 protocol AddScheduleUseCase {
-    func execute(title: String, date: Date, notes: String) async throws
+    func execute(title: String, date: Date, notes: String?, audioFileURL: URL?) async throws
 }
 
 class AddScheduleUseCaseImpl: AddScheduleUseCase {
@@ -23,10 +23,10 @@ class AddScheduleUseCaseImpl: AddScheduleUseCase {
         self.scheduleNetworkService = scheduleNetworkService
     }
 
-    func execute(title: String, date: Date, notes: String) async throws {
+    func execute(title: String, date: Date, notes: String?, audioFileURL: URL?) async throws {
         let schedule = Schedule(id: UUID(), title: title, date: date, notes: notes)
 
-        try await scheduleNetworkService.uploadSchedule(schedule)
+        try await scheduleNetworkService.uploadSchedule(schedule, audioFileURL: audioFileURL)
 
         var schedules = scheduleRepository.getSchedules()
         schedules.append(schedule)

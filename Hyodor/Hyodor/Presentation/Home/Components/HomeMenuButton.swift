@@ -20,9 +20,10 @@ struct HomeMenuButton: View {
                     .frame(width: 24, height: 24)
                     .foregroundColor(.white)
             }
+
             Text(title)
                 .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundColor(.primary)
+                .foregroundColor(.white)
         }
         .frame(maxWidth: .infinity, minHeight: 80)
         .background(

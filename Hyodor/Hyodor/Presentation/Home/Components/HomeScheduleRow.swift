@@ -11,15 +11,10 @@ struct HomeScheduleRow: View {
     let title: String
     let date: Date
     let time: String
-    let isPast: Bool
     let isToday: Bool
 
-    private var dateString: String {
-        date.toKoreanDateString()
-    }
-
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
+        HStack(spacing: 14) {
             Text(date.dDayText(for: date))
                 .font(.system(size: 14,design: .rounded))
                 .frame(width: 40, height: 36)
@@ -35,33 +30,21 @@ struct HomeScheduleRow: View {
                 )
                 .padding(.vertical, 2)
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    if isPast {
-                        Text("시간 지남")
-                            .font(.caption2)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(
-                                Capsule()
-                                    .fill(Color.red.opacity(0.14))
-                            )
-                            .foregroundColor(.red)
-                    }
-                }
-                Text(dateString)
+            Text(title)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.primary)
+                .lineLimit(1)
+
+            Spacer()
+            VStack(alignment: .leading){
+                Text(date.toKoreanDateString())
                     .font(.caption2)
                     .foregroundColor(.gray)
+                Text(time)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .frame(minWidth: 54, alignment: .trailing)
             }
-            Spacer()
-            Text(time)
-                .font(.system(size: 16, weight: .light, design: .rounded))
-                .foregroundColor(.primary)
-                .frame(minWidth: 54, alignment: .trailing)
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)

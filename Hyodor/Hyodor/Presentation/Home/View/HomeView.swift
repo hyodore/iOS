@@ -61,8 +61,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - UI Sections (기존 코드 그대로)
-
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
@@ -93,12 +91,11 @@ struct HomeView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - Schedule Section
-
     private var scheduleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "부모님 일정")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
+
             VStack(spacing: 8) {
                 ForEach(0..<4) { idx in
                     if idx < viewModel.displayedEvents.count {
@@ -126,7 +123,6 @@ struct HomeView: View {
                 title: event.title,
                 date: event.date,
                 time: event.date.toKoreanTimeString(),
-                isPast: scheduleStatus.isPast,
                 isToday: scheduleStatus.isToday
             )
         }
@@ -138,7 +134,6 @@ struct HomeView: View {
             title: "",
             date: Date(),
             time: "",
-            isPast: false,
             isToday: false
         )
         .opacity(0)
