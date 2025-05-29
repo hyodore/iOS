@@ -37,78 +37,84 @@ struct AddEventView: View {
     }
 
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .bottom) {
-                VStack(spacing: 0) {
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            LazyVStack(spacing: 40) {
-                                VStack(spacing: 32) {
-                                    TossScheduleHeader(coordinator: coordinator)
+            NavigationView {
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 0) {
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                LazyVStack(spacing: 40) {
+                                    VStack(spacing: 32) {
+                                        TossScheduleHeader(coordinator: coordinator)
 
-                                    TossStepSection(stepNumber: 1, currentStep: currentStep) {
-                                        TossDateTimeInput(
-                                            selectedDate: $selectedDate,
-                                            selectedTime: $selectedTime,
-                                            showingDatePicker: $showingDatePicker,
-                                            showingTimePicker: $showingTimePicker,
-                                            onCompleted: {
-                                                if !showTitleSection {
-                                                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                                        showTitleSection = true
-                                                        currentStep = 2
-                                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                            withAnimation(.easeInOut(duration: 0.5)) {
-                                                                proxy.scrollTo("step2", anchor: .top)
-                                                            }
-                                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                                                                titleFocused = true
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        )
-                                    }
-                                    .id("step1")
-
-                                    if showTitleSection {
-                                        TossStepSection(stepNumber: 2, currentStep: currentStep) {
-                                            TossTitleInput(
-                                                title: $title,
-                                                titleFocused: $titleFocused,
-                                                onSubmit: {
-                                                    if !title.isEmpty && !showNotesSection {
+                                        // 🔥 Step 1: 현재 스텝이 1일 때만 표시
+                                        if currentStep == 1 {
+                                            TossStepSection(stepNumber: 1, currentStep: currentStep) {
+                                                TossDateTimeInput(
+                                                    selectedDate: $selectedDate,
+                                                    selectedTime: $selectedTime,
+                                                    showingDatePicker: $showingDatePicker,
+                                                    showingTimePicker: $showingTimePicker,
+                                                    onCompleted: {
                                                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                                            showNotesSection = true
-                                                            currentStep = 3
+                                                            showTitleSection = true
+                                                            currentStep = 2
                                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                                                 withAnimation(.easeInOut(duration: 0.5)) {
-                                                                    proxy.scrollTo("step3", anchor: .top)
+                                                                    proxy.scrollTo("step2", anchor: .top)
                                                                 }
                                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                                                                    notesFocused = true
+                                                                    titleFocused = true
                                                                 }
                                                             }
                                                         }
                                                     }
-                                                }
-                                            )
+                                                )
+                                            }
+                                            .id("step1")
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                                removal: .move(edge: .top).combined(with: .opacity)
+                                            ))
                                         }
-                                        .id("step2")
-                                        .transition(.asymmetric(
-                                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .move(edge: .leading).combined(with: .opacity)
-                                        ))
-                                    }
 
-                                    if showNotesSection {
-                                        TossStepSection(stepNumber: 3, currentStep: currentStep) {
-                                            TossNotesInput(
-                                                notes: $notes,
-                                                notesFocused: $notesFocused,
-                                                onSkip: {
-                                                    if !showAudioSection {
+                                        // 🔥 Step 2: 현재 스텝이 2일 때만 표시
+                                        if currentStep == 2 {
+                                            TossStepSection(stepNumber: 2, currentStep: currentStep) {
+                                                TossTitleInput(
+                                                    title: $title,
+                                                    titleFocused: $titleFocused,
+                                                    onSubmit: {
+                                                        if !title.isEmpty {
+                                                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                                                showNotesSection = true
+                                                                currentStep = 3
+                                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                                    withAnimation(.easeInOut(duration: 0.5)) {
+                                                                        proxy.scrollTo("step3", anchor: .top)
+                                                                    }
+                                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                                                        notesFocused = true
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                )
+                                            }
+                                            .id("step2")
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                                removal: .move(edge: .top).combined(with: .opacity)
+                                            ))
+                                        }
+
+                                        // 🔥 Step 3: 현재 스텝이 3일 때만 표시
+                                        if currentStep == 3 {
+                                            TossStepSection(stepNumber: 3, currentStep: currentStep) {
+                                                TossNotesInput(
+                                                    notes: $notes,
+                                                    notesFocused: $notesFocused,
+                                                    onSkip: {
                                                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                                             showAudioSection = true
                                                             currentStep = 4
@@ -119,87 +125,88 @@ struct AddEventView: View {
                                                             }
                                                         }
                                                     }
-                                                }
-                                            )
+                                                )
+                                            }
+                                            .id("step3")
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                                removal: .move(edge: .top).combined(with: .opacity)
+                                            ))
                                         }
-                                        .id("step3")
-                                        .transition(.asymmetric(
-                                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .move(edge: .leading).combined(with: .opacity)
-                                        ))
-                                    }
 
-                                    if showAudioSection {
-                                        TossStepSection(stepNumber: 4, currentStep: currentStep) {
-                                            TossAudioInput(audioRecorder: audioRecorder)
+                                        // 🔥 Step 4: 현재 스텝이 4일 때만 표시
+                                        if currentStep == 4 {
+                                            TossStepSection(stepNumber: 4, currentStep: currentStep) {
+                                                TossAudioInput(audioRecorder: audioRecorder)
+                                            }
+                                            .id("step4")
+                                            .transition(.asymmetric(
+                                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                                removal: .move(edge: .top).combined(with: .opacity)
+                                            ))
                                         }
-                                        .id("step4")
-                                        .transition(.asymmetric(
-                                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .move(edge: .leading).combined(with: .opacity)
-                                        ))
                                     }
+                                    .padding(.top, 20)
+
+                                    Spacer(minLength: 300)
                                 }
-                                .padding(.top, 20)
-
-                                Spacer(minLength: 300)
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
+                            .scrollDismissesKeyboard(.interactively)
                         }
-                        .scrollDismissesKeyboard(.interactively)
                     }
-                }
 
-                TossBottomCTA(
-                    title: title,
-                    audioRecorder: audioRecorder,
-                    currentStep: currentStep,
-                    isComplete: !title.isEmpty && selectedDate != nil && selectedTime != nil,
-                    onSave: {
-                        Task {
-                            let finalDate = combineDateAndTime(date: selectedDate, time: selectedTime)
-                            let notesText = notes.isEmpty ? nil : notes
-                            await viewModel.calendarVM.addEvent(
-                                title: title,
-                                date: finalDate,
-                                notes: notesText,
-                                audioFileURL: audioRecorder.recordingURL
-                            )
-                            audioRecorder.cleanup()
-                            coordinator.dismissAddEvent()
-                        }
-                    },
-                    onSkip: {
-                        if currentStep == 3 && !showAudioSection {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                showAudioSection = true
-                                currentStep = 4
+                    // 기존 TossBottomCTA는 그대로 유지
+                    TossBottomCTA(
+                        title: title,
+                        audioRecorder: audioRecorder,
+                        currentStep: currentStep,
+                        isComplete: !title.isEmpty && selectedDate != nil && selectedTime != nil,
+                        onSave: {
+                            Task {
+                                let finalDate = combineDateAndTime(date: selectedDate, time: selectedTime)
+                                let notesText = notes.isEmpty ? nil : notes
+                                await viewModel.calendarVM.addEvent(
+                                    title: title,
+                                    date: finalDate,
+                                    notes: notesText,
+                                    audioFileURL: audioRecorder.recordingURL
+                                )
+                                audioRecorder.cleanup()
+                                coordinator.dismissAddEvent()
+                            }
+                        },
+                        onSkip: {
+                            if currentStep == 3 {
+                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                    showAudioSection = true
+                                    currentStep = 4
+                                }
                             }
                         }
-                    }
-                )
-            }
-            .background(Color(.systemBackground))
-            .navigationTitle("")
-            .navigationBarHidden(true)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
-            .onAppear {
-                Task {
-                    await audioRecorder.requestPermission()
+                    )
                 }
-            }
-            .alert("마이크 권한이 필요해요", isPresented: $audioRecorder.showingPermissionAlert) {
-                Button("설정으로 이동") {
-                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(settingsUrl)
+                .background(Color(.systemBackground))
+                .navigationTitle("")
+                .navigationBarHidden(true)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .onAppear {
+                    Task {
+                        await audioRecorder.requestPermission()
                     }
                 }
-                Button("나중에", role: .cancel) {}
-            } message: {
-                Text("음성 메모를 녹음하려면\n마이크 접근 권한을 허용해주세요")
+                .alert("마이크 권한이 필요해요", isPresented: $audioRecorder.showingPermissionAlert) {
+                    Button("설정으로 이동") {
+                        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(settingsUrl)
+                        }
+                    }
+                    Button("나중에", role: .cancel) {}
+                } message: {
+                    Text("음성 메모를 녹음하려면\n마이크 접근 권한을 허용해주세요")
+                }
             }
         }
-    }
 
     private func combineDateAndTime(date: Date?, time: Date?) -> Date {
         guard let selectedDate = date, let selectedTime = time else {
@@ -279,19 +286,6 @@ struct TossScheduleHeader: View {
                 }
                 Spacer()
             }
-
-            VStack(spacing: 8) {
-                Text("새로운 일정을")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-
-                Text("만들어보세요")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
