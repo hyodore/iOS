@@ -60,8 +60,7 @@ struct CalendarView: View {
                 )
             }
             .sheet(isPresented: $coordinator.showAddEvent) {
-                // 🔥 수정된 부분: MVVM 패턴에 맞게 AddEventView 생성
-                AddEventView.create(
+                AddScheduleView.create(
                     homeViewModel: viewModel,
                     coordinator: coordinator,
                     selectedDate: viewModel.selectedDate

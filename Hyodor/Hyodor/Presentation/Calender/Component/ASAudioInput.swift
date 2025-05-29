@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossAudioInput: View {
-    let viewModel: AddEventViewModel
+struct ASAudioInput: View {
+    let viewModel: AddScheduleViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -24,9 +24,9 @@ struct TossAudioInput: View {
             }
 
             if viewModel.audioRecorder.isRecording {
-                TossRecordingCard(audioRecorder: viewModel.audioRecorder)
+                ASRecordingCard(audioRecorder: viewModel.audioRecorder)
             } else if viewModel.audioRecorder.recordingURL != nil {
-                TossAudioPlaybackCard(audioRecorder: viewModel.audioRecorder)
+                ASAudioPlaybackCard(audioRecorder: viewModel.audioRecorder)
             } else {
                 Button(action: {
                     Task {

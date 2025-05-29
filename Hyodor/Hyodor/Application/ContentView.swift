@@ -13,7 +13,7 @@ struct HyodorApp: App {
 
     let calendarVM = CalendarVM()
     let homeCoordinator = HomeCoordinator()
-    let sharedAlbumViewModel = SharedAlbumViewModel()
+    let sharedAlbumViewModel = SharedAlbumVM()
 
     @State private var isActive = false
 

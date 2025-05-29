@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossBottomCTA: View {
-    @Bindable var viewModel: AddEventViewModel
+struct ASBottomCTA: View {
+    @Bindable var viewModel: AddScheduleViewModel
 
     var body: some View {
         VStack(spacing: 0) {

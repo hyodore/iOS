@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossDateTimeInput: View {
-    @Bindable var viewModel: AddEventViewModel
+struct ASDateTimeInput: View {
+    @Bindable var viewModel: AddScheduleViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -92,10 +92,10 @@ struct TossDateTimeInput: View {
             }
         }
         .sheet(isPresented: $viewModel.showingDatePicker) {
-            TossDatePickerSheet(viewModel: viewModel)
+            ASDatePickerSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $viewModel.showingTimePicker) {
-            TossTimePickerSheet(viewModel: viewModel)
+            ASTimePickerSheet(viewModel: viewModel)
         }
     }
 }

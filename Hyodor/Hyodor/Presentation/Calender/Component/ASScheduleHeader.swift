@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossScheduleHeader: View {
-    let viewModel: AddEventViewModel
+struct ASScheduleHeader: View {
+    let viewModel: AddScheduleViewModel
 
     var body: some View {
         VStack(spacing: 16) {
