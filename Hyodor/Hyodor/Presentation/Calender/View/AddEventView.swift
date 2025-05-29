@@ -46,7 +46,6 @@ struct AddEventView: View {
                                     VStack(spacing: 32) {
                                         TossScheduleHeader(coordinator: coordinator)
 
-                                        // 🔥 Step 1: 현재 스텝이 1일 때만 표시
                                         if currentStep == 1 {
                                             TossStepSection(stepNumber: 1, currentStep: currentStep) {
                                                 TossDateTimeInput(
@@ -77,7 +76,6 @@ struct AddEventView: View {
                                             ))
                                         }
 
-                                        // 🔥 Step 2: 현재 스텝이 2일 때만 표시
                                         if currentStep == 2 {
                                             TossStepSection(stepNumber: 2, currentStep: currentStep) {
                                                 TossTitleInput(
@@ -108,7 +106,6 @@ struct AddEventView: View {
                                             ))
                                         }
 
-                                        // 🔥 Step 3: 현재 스텝이 3일 때만 표시
                                         if currentStep == 3 {
                                             TossStepSection(stepNumber: 3, currentStep: currentStep) {
                                                 TossNotesInput(
@@ -134,7 +131,6 @@ struct AddEventView: View {
                                             ))
                                         }
 
-                                        // 🔥 Step 4: 현재 스텝이 4일 때만 표시
                                         if currentStep == 4 {
                                             TossStepSection(stepNumber: 4, currentStep: currentStep) {
                                                 TossAudioInput(audioRecorder: audioRecorder)
@@ -156,7 +152,6 @@ struct AddEventView: View {
                         }
                     }
 
-                    // 기존 TossBottomCTA는 그대로 유지
                     TossBottomCTA(
                         title: title,
                         audioRecorder: audioRecorder,
@@ -269,7 +264,6 @@ struct TossStepSection<Content: View>: View {
     }
 }
 
-// 🔥 토스 스타일 헤더
 struct TossScheduleHeader: View {
     let coordinator: CalendarCoordinator
 
