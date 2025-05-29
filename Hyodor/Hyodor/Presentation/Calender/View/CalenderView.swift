@@ -29,7 +29,6 @@ struct CalendarView: View {
                     },
                     onMonthChanged: { offset in
                         moveMonth(offset)
-
                     }
                 )
                 CalendarGrid(
@@ -61,8 +60,9 @@ struct CalendarView: View {
                 )
             }
             .sheet(isPresented: $coordinator.showAddEvent) {
-                AddEventView(
-                    viewModel: viewModel,
+                // 🔥 수정된 부분: MVVM 패턴에 맞게 AddEventView 생성
+                AddEventView.create(
+                    homeViewModel: viewModel,
                     coordinator: coordinator,
                     selectedDate: viewModel.selectedDate
                 )
@@ -79,7 +79,8 @@ struct CalendarView: View {
                     },
                     onAddTap: {
                         coordinator.presentAddEvent()
-                    },)
+                    }
+                )
             }
         }
     }
@@ -121,9 +122,9 @@ struct CalendarView: View {
 }
 
 struct CustomBarItems: View {
-
     let onTodayTap: () -> Void
     let onAddTap: () -> Void
+
     var body: some View {
         HStack{
             Button(action: onTodayTap) {
@@ -289,7 +290,6 @@ struct CalendarCell: View {
                             .fill(isSelected ? Color.white : Color.blue)
                             .frame(width: 4, height: 4)
                     }
-
                     if eventCount > 3 {
                         Text("+")
                             .font(.system(size: 8, weight: .bold))
@@ -300,11 +300,12 @@ struct CalendarCell: View {
                 Spacer()
                     .frame(height: 8)
             }
-        }.frame(width: 44, height: 44)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(backgroundColor)
-            )
+        }
+        .frame(width: 44, height: 44)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(backgroundColor)
+        )
     }
 
     private var textColor: Color {
@@ -364,9 +365,10 @@ struct ScheduleList: View {
                 EmptyScheduleView()
             }
             Spacer()
-        }.padding()
-            .frame(maxWidth: .infinity)
-            .background(Color(.white))
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.white))
     }
 }
 
