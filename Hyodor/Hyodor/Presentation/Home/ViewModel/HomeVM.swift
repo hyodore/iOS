@@ -47,14 +47,6 @@ class HomeVM {
         self.notificationRepository = notificationRepository
     }
 
-    func onAppear() {
-        loadNotifications()
-    }
-
-    func onNotificationReceived() {
-        loadNotifications()
-    }
-
     func didTapCalendar() {
         coordinator.showCalendar()
     }

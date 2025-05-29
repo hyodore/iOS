@@ -10,11 +10,10 @@ import SwiftUI
 struct HomeScheduleRow: View {
     let title: String
     let date: Date
-    let time: String
     let isToday: Bool
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack{
             Text(date.dDayText(for: date))
                 .font(.system(size: 14,design: .rounded))
                 .frame(width: 40, height: 36)
@@ -36,11 +35,12 @@ struct HomeScheduleRow: View {
                 .lineLimit(1)
 
             Spacer()
+
             VStack(alignment: .leading){
                 Text(date.toKoreanDateString())
                     .font(.caption2)
                     .foregroundColor(.gray)
-                Text(time)
+                Text(date.toKoreanTimeString())
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundColor(.primary)
                     .frame(minWidth: 54, alignment: .trailing)

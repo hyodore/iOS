@@ -41,7 +41,6 @@ struct HomeView: View {
                 destinationView(for: route)
             }
             .onAppear {
-                viewModel.onAppear()
                 viewModel.loadNotifications()
 
                 withAnimation(.easeInOut(duration: 0.5)) {
@@ -49,9 +48,8 @@ struct HomeView: View {
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
-
                 refreshTrigger.toggle()
-                viewModel.onNotificationReceived()
+                viewModel.loadNotifications()
             }
             .onChange(of: refreshTrigger) {
                 DispatchQueue.main.async {
@@ -122,7 +120,6 @@ struct HomeView: View {
             HomeScheduleRow(
                 title: event.title,
                 date: event.date,
-                time: event.date.toKoreanTimeString(),
                 isToday: scheduleStatus.isToday
             )
         }
@@ -133,7 +130,6 @@ struct HomeView: View {
         HomeScheduleRow(
             title: "",
             date: Date(),
-            time: "",
             isToday: false
         )
         .opacity(0)
