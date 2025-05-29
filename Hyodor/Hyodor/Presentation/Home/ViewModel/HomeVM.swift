@@ -71,12 +71,8 @@ class HomeVM {
         selectedSchedule = nil
     }
 
-    func loadNotifications() {
-        notifications = notificationRepository.getNotifications()
-    }
-
-    func getLatestNotifications() -> [NotificationData] {
-        return getLatestNotificationsUseCase.execute()
+    func getLatestNotifications(){
+        notifications = getLatestNotificationsUseCase.execute()
     }
 
     func getScheduleStatus(for event: Schedule) -> (isPast: Bool, isToday: Bool) {
