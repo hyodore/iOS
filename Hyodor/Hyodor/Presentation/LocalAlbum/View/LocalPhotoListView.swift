@@ -8,8 +8,8 @@
 import SwiftUI
 import Photos
 
-struct PhotoListView: View {
-    @State var viewModel: PhotoListVM
+struct LocalPhotoListView: View {
+    @State var viewModel: LocalPhotoListVM
     var onUploadComplete: ((SyncResponseDTO) -> Void)?
 
     private let columns = [
@@ -27,7 +27,7 @@ struct PhotoListView: View {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 0) {
                         ForEach(viewModel.photoAssets) { photoModel in
-                            PhotoCell(
+                            LocalPhotoCell(
                                 asset: photoModel.asset,
                                 isSelected: photoModel.isSelected,
                                 isUploaded: photoModel.isUploaded,

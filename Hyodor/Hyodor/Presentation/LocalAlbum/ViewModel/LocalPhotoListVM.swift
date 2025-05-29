@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 
 @Observable
-class PhotoListVM {
+class LocalPhotoListVM {
     private let photoRepository: PhotoRepository
     private let galleryRepository: GalleryRepository
 

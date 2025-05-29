@@ -139,7 +139,7 @@ struct SharedAlbumView: View {
                     Task { await viewModel.syncPhotos() }
                 }) {
                     NavigationView {
-                        PhotoListView(viewModel: PhotoListVM(), onUploadComplete: { _ in
+                        LocalPhotoListView(viewModel: LocalPhotoListVM(), onUploadComplete: { _ in
                             showingPhotoList = false
                         })
                     }
