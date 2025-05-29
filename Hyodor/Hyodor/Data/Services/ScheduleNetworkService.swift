@@ -14,7 +14,6 @@ protocol ScheduleNetworkService {
 
 class ScheduleNetworkServiceImpl: ScheduleNetworkService {
     func uploadSchedule(_ schedule: Schedule, audioFileURL: URL? = nil) async throws {
-        print("📤 ScheduleNetworkService uploadSchedule 시작")
 
         guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.scheduleUpload) else {
             throw URLError(.badURL)
@@ -39,7 +38,6 @@ class ScheduleNetworkServiceImpl: ScheduleNetworkService {
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: scheduleData, options: []) else {
-            print("❌ JSON 직렬화 실패")
             throw URLError(.cannotParseResponse)
         }
 
@@ -60,10 +58,7 @@ class ScheduleNetworkServiceImpl: ScheduleNetworkService {
                 body.append("Content-Type: audio/mp4\r\n\r\n".data(using: .utf8)!)
                 body.append(fileData)
                 body.append("\r\n".data(using: .utf8)!)
-
-                print("📤 파일 정보: \(filename), 크기: \(fileData.count) bytes")
             } catch {
-                print("❌ 파일 읽기 실패: \(error.localizedDescription)")
                 throw URLError(.cannotLoadFromNetwork)
             }
         } else {
@@ -71,25 +66,17 @@ class ScheduleNetworkServiceImpl: ScheduleNetworkService {
             body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\"\r\n".data(using: .utf8)!)
             body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8)!)
             body.append("\r\n".data(using: .utf8)!)
-
-            print("📤 파일 없음 - 빈 파일 필드로 전송")
         }
 
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
         request.httpBody = body
 
-        print("📤 Content-Type: \(request.value(forHTTPHeaderField: "Content-Type") ?? "")")
-        print("📤 JSON 데이터: \(String(data: jsonData, encoding: .utf8) ?? "")")
-        print("📤 바디 크기: \(body.count) bytes")
-
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
-            print("❌ ScheduleNetworkService 업로드 실패")
             throw URLError(.badServerResponse)
         }
 
-        print("✅ ScheduleNetworkService 업로드 성공")
     }
 
     func deleteSchedule(_ scheduleId: UUID) async throws {

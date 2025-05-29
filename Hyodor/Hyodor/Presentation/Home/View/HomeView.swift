@@ -127,8 +127,6 @@ struct HomeView: View {
         .opacity(0)
     }
 
-    // MARK: - Alert Section
-
     private var alertSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -154,6 +152,7 @@ struct HomeView: View {
     private var alertRowsContainer: some View {
         VStack(spacing: 8) {
             let latestNotifications = viewModel.notifications
+            
             ForEach(latestNotifications.indices, id: \.self) { idx in
                 let notification = latestNotifications[idx]
                 Button {
@@ -187,8 +186,6 @@ struct HomeView: View {
         )
         .opacity(0)
     }
-
-    // MARK: - Navigation
 
     private func scheduleDetailSheet(for schedule: Schedule) -> some View {
         NavigationStack {
