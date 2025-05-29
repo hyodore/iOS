@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TossRecordingCard: View {
+struct ASRecordingCard: View {
     let audioRecorder: AudioRecorder
     @State private var recordingTime: TimeInterval = 0
     @State private var timer: Timer?
@@ -90,6 +90,6 @@ struct TossRecordingCard: View {
 }
 
 #Preview {
-    TossRecordingCard(audioRecorder: AudioRecorder())
+    ASRecordingCard(audioRecorder: AudioRecorder())
         .padding()
 }

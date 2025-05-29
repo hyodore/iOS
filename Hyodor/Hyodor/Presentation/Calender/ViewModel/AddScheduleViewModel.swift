@@ -9,12 +9,10 @@ import SwiftUI
 import AVFoundation
 
 @Observable
-class AddEventViewModel {
-    // MARK: - Dependencies
+class AddScheduleViewModel {
     private let homeViewModel: HomeVM
     private let coordinator: CalendarCoordinator
 
-    // MARK: - State Properties
     var title: String = ""
     var notes: String = ""
     var selectedDate: Date?
@@ -22,7 +20,6 @@ class AddEventViewModel {
     var currentStep: Int = 1
     var audioRecorder = AudioRecorder()
 
-    // MARK: - UI State
     var showTitleSection = false
     var showNotesSection = false
     var showAudioSection = false
@@ -31,7 +28,6 @@ class AddEventViewModel {
     var titleFocused = false
     var notesFocused = false
 
-    // MARK: - Computed Properties
     var isComplete: Bool {
         !title.isEmpty && selectedDate != nil && selectedTime != nil
     }
@@ -50,7 +46,6 @@ class AddEventViewModel {
         self.selectedDate = selectedDate
     }
 
-    // MARK: - Step Management
     func moveToStep2() {
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
             showTitleSection = true
@@ -78,7 +73,6 @@ class AddEventViewModel {
         }
     }
 
-    // MARK: - Auto Progress
     func checkDateTimeCompletion() {
         if canProceedFromStep1 && currentStep == 1 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -93,7 +87,6 @@ class AddEventViewModel {
         }
     }
 
-    // MARK: - Data Updates
     func updateSelectedDate(_ date: Date) {
         selectedDate = date
         checkDateTimeCompletion()
@@ -112,25 +105,22 @@ class AddEventViewModel {
         notes = newNotes
     }
 
-    // MARK: - Focus Management (수정된 부분)
     func setTitleFocus() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            self.titleFocused = true  // self. 추가
+            self.titleFocused = true
         }
     }
 
     func setNotesFocus() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            self.notesFocused = true  // self. 추가
+            self.notesFocused = true
         }
     }
 
-    // MARK: - Audio Management
     func requestAudioPermission() async {
         await audioRecorder.requestPermission()
     }
 
-    // MARK: - Actions
     func saveEvent() {
         Task {
             let finalDate = combineDateAndTime(date: selectedDate, time: selectedTime)
@@ -153,7 +143,6 @@ class AddEventViewModel {
         coordinator.dismissAddEvent()
     }
 
-    // MARK: - Helper Methods
     private func combineDateAndTime(date: Date?, time: Date?) -> Date {
         guard let selectedDate = date, let selectedTime = time else {
             return Date()

@@ -1,5 +1,5 @@
 //
-//  TossDatePickerSheet.swift
+//  TossTimePickerSheet.swift
 //  Hyodor
 //
 //  Created by 김상준 on 5/30/25.
@@ -7,18 +7,17 @@
 
 import SwiftUI
 
-struct TossDatePickerSheet: View {
-    @Bindable var viewModel: AddEventViewModel
+struct ASTimePickerSheet: View {
+    @Bindable var viewModel: AddScheduleViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var tempDate = Date()
+    @State private var tempTime = Date()
 
     var body: some View {
         NavigationView {
             VStack {
-                DatePicker("", selection: $tempDate, displayedComponents: .date)
-                    .datePickerStyle(.graphical)
+                DatePicker("", selection: $tempTime, displayedComponents: .hourAndMinute)
+                    .datePickerStyle(.wheel)
                     .labelsHidden()
-                Spacer()
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -28,7 +27,7 @@ struct TossDatePickerSheet: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("완료") {
-                        viewModel.updateSelectedDate(tempDate)
+                        viewModel.updateSelectedTime(tempTime)
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -36,7 +35,7 @@ struct TossDatePickerSheet: View {
             }
         }
         .onAppear {
-            tempDate = viewModel.selectedDate ?? Date()
+            tempTime = viewModel.selectedTime ?? Date()
         }
     }
 }

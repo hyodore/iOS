@@ -40,7 +40,6 @@ struct PhotoListView: View {
                     .padding(.horizontal, 0)
                 }
 
-                // 업로드 버튼
                 Button(action: {
                     Task {
                         await viewModel.uploadSelectedPhotos { response in

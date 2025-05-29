@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TossStepSection<Content: View>: View {
+struct ASStepSection<Content: View>: View {
     let stepNumber: Int
     let currentStep: Int
     @ViewBuilder let content: () -> Content
@@ -40,7 +40,7 @@ struct TossStepSection<Content: View>: View {
 }
 
 #Preview {
-    TossStepSection(stepNumber: 1, currentStep: 1) {
+    ASStepSection(stepNumber: 1, currentStep: 1) {
         Text("Step Content")
             .padding()
             .background(Color(.systemGray6))

@@ -8,7 +8,6 @@
 import SwiftUI
 import Photos
 
-// MARK: - 사진 셀
 struct PhotoCell: View {
     let asset: PHAsset
     let isSelected: Bool
@@ -16,7 +15,6 @@ struct PhotoCell: View {
     let onTap: () -> Void
     @State private var image: Image?
 
-    // 셀 크기 계산 (spacing 0 기준)
     private var cellSize: CGFloat {
         UIScreen.main.bounds.width / 3
     }
@@ -41,7 +39,6 @@ struct PhotoCell: View {
                 }
             }
 
-            // 선택 표시
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 24))
@@ -50,7 +47,6 @@ struct PhotoCell: View {
                     .padding(4)
             }
 
-            // 업로드된 표시
             if isUploaded {
                 VStack(spacing: 4) {
                     ZStack {
@@ -81,9 +77,9 @@ struct PhotoCell: View {
             }
         }
         .frame(width: cellSize, height: cellSize)
-        .background(Color.clear)            // 터치 영역 보장
-        .contentShape(Rectangle())          // 셀 전체가 터치 영역
-        .onTapGesture { onTap() }           // 터치 콜백을 이곳에!
+        .background(Color.clear)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }         
         .onAppear { loadImage() }
         .accessibilityLabel(isUploaded ? "이미 업로드된 사진" : isSelected ? "선택된 사진" : "사진, \(asset.creationDate?.formatted() ?? "날짜 미상")")
         .accessibilityAddTraits(isUploaded ? .isStaticText : [])

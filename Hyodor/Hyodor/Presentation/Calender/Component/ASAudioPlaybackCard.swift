@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TossAudioPlaybackCard: View {
+struct ASAudioPlaybackCard: View {
     let audioRecorder: AudioRecorder
     @State private var isPlaying = false
 
@@ -84,6 +84,6 @@ struct TossAudioPlaybackCard: View {
 }
 
 #Preview {
-    TossAudioPlaybackCard(audioRecorder: AudioRecorder())
+    ASAudioPlaybackCard(audioRecorder: AudioRecorder())
         .padding()
 }

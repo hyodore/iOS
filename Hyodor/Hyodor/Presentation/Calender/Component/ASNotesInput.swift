@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossNotesInput: View {
-    @Bindable var viewModel: AddEventViewModel
+struct ASNotesInput: View {
+    @Bindable var viewModel: AddScheduleViewModel
 
     @FocusState private var isTextFieldFocused: Bool
 
@@ -28,7 +28,7 @@ struct TossNotesInput: View {
                 .padding(.vertical, 20)
                 .padding(.horizontal, 16)
                 .focused($isTextFieldFocused)
-                .submitLabel(.next) // "다음" 버튼으로 표시
+                .submitLabel(.next)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color(.systemGray6))
@@ -50,7 +50,6 @@ struct TossNotesInput: View {
                     }
                 )
                 .onSubmit {
-                    // 🔥 리턴 키를 누르면 다음 단계로 진행
                     viewModel.moveToStep4()
                 }
                 .onChange(of: viewModel.notesFocused) { _, newValue in
@@ -71,7 +70,7 @@ struct TossNotesInput: View {
 
 
 #Preview {
-    TossNotesInput(viewModel: AddEventViewModel(
+    ASNotesInput(viewModel: AddScheduleViewModel(
         homeViewModel: HomeVM(coordinator: HomeCoordinator()),
         coordinator: CalendarCoordinator(),
         selectedDate: Date()

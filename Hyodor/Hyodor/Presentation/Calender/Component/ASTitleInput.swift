@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TossTitleInput: View {
-    @Bindable var viewModel: AddEventViewModel
+struct ASTitleInput: View {
+    @Bindable var viewModel: AddScheduleViewModel
 
     @FocusState private var isTextFieldFocused: Bool
 
@@ -25,7 +25,7 @@ struct TossTitleInput: View {
                 .padding(.vertical, 20)
                 .padding(.horizontal, 0)
                 .focused($isTextFieldFocused)
-                .submitLabel(.next) // "다음" 버튼으로 표시
+                .submitLabel(.next) 
                 .background(
                     VStack {
                         Spacer()
@@ -70,7 +70,7 @@ struct TossTitleInput: View {
 
 
 #Preview {
-    TossTitleInput(viewModel: AddEventViewModel(
+    ASTitleInput(viewModel: AddScheduleViewModel(
         homeViewModel: HomeVM(coordinator: HomeCoordinator()),
         coordinator: CalendarCoordinator(),
         selectedDate: Date()

@@ -9,8 +9,8 @@
 import SwiftUI
 import AVFoundation
 
-struct AddEventView: View {
-    @Bindable var viewModel: AddEventViewModel
+struct AddScheduleView: View {
+    @Bindable var viewModel: AddScheduleViewModel
 
     var body: some View {
         NavigationView {
@@ -20,11 +20,11 @@ struct AddEventView: View {
                         ScrollView {
                             LazyVStack(spacing: 40) {
                                 VStack(spacing: 32) {
-                                    TossScheduleHeader(viewModel: viewModel)
+                                    ASScheduleHeader(viewModel: viewModel)
 
                                     if viewModel.currentStep == 1 {
-                                        TossStepSection(stepNumber: 1, currentStep: viewModel.currentStep) {
-                                            TossDateTimeInput(viewModel: viewModel)
+                                        ASStepSection(stepNumber: 1, currentStep: viewModel.currentStep) {
+                                            ASDateTimeInput(viewModel: viewModel)
                                         }
                                         .id("step1")
                                         .transition(.asymmetric(
@@ -34,8 +34,8 @@ struct AddEventView: View {
                                     }
 
                                     if viewModel.currentStep == 2 {
-                                        TossStepSection(stepNumber: 2, currentStep: viewModel.currentStep) {
-                                            TossTitleInput(viewModel: viewModel)
+                                        ASStepSection(stepNumber: 2, currentStep: viewModel.currentStep) {
+                                            ASTitleInput(viewModel: viewModel)
                                         }
                                         .id("step2")
                                         .transition(.asymmetric(
@@ -48,8 +48,8 @@ struct AddEventView: View {
                                     }
 
                                     if viewModel.currentStep == 3 {
-                                        TossStepSection(stepNumber: 3, currentStep: viewModel.currentStep) {
-                                            TossNotesInput(viewModel: viewModel)
+                                        ASStepSection(stepNumber: 3, currentStep: viewModel.currentStep) {
+                                            ASNotesInput(viewModel: viewModel)
                                         }
                                         .id("step3")
                                         .transition(.asymmetric(
@@ -62,8 +62,8 @@ struct AddEventView: View {
                                     }
 
                                     if viewModel.currentStep == 4 {
-                                        TossStepSection(stepNumber: 4, currentStep: viewModel.currentStep) {
-                                            TossAudioInput(viewModel: viewModel)
+                                        ASStepSection(stepNumber: 4, currentStep: viewModel.currentStep) {
+                                            ASAudioInput(viewModel: viewModel)
                                         }
                                         .id("step4")
                                         .transition(.asymmetric(
@@ -87,7 +87,7 @@ struct AddEventView: View {
                     }
                 }
 
-                TossBottomCTA(viewModel: viewModel)
+                ASBottomCTA(viewModel: viewModel)
             }
             .background(Color(.systemBackground))
             .navigationTitle("")
@@ -112,20 +112,19 @@ struct AddEventView: View {
     }
 }
 
-// MARK: - Factory Method
-extension AddEventView {
-    static func create(homeViewModel: HomeVM, coordinator: CalendarCoordinator, selectedDate: Date) -> AddEventView {
-        let viewModel = AddEventViewModel(
+extension AddScheduleView {
+    static func create(homeViewModel: HomeVM, coordinator: CalendarCoordinator, selectedDate: Date) -> AddScheduleView {
+        let viewModel = AddScheduleViewModel(
             homeViewModel: homeViewModel,
             coordinator: coordinator,
             selectedDate: selectedDate
         )
-        return AddEventView(viewModel: viewModel)
+        return AddScheduleView(viewModel: viewModel)
     }
 }
 
 #Preview {
-    AddEventView.create(
+    AddScheduleView.create(
         homeViewModel: HomeVM(coordinator: HomeCoordinator()),
         coordinator: CalendarCoordinator(),
         selectedDate: Date()

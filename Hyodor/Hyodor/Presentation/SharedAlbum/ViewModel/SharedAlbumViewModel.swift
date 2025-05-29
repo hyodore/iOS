@@ -8,7 +8,7 @@
 import SwiftUI
 
 @Observable
-class SharedAlbumViewModel {
+class SharedAlbumVM {
     var photos: [SharedPhoto] = []
     var isLoading = false
     var errorMessage: String?
@@ -60,11 +60,11 @@ class SharedAlbumViewModel {
 }
 
 private struct SharedAlbumViewModelKey: EnvironmentKey {
-    static let defaultValue: SharedAlbumViewModel = SharedAlbumViewModel()
+    static let defaultValue: SharedAlbumVM = SharedAlbumVM()
 }
 
 extension EnvironmentValues {
-    var sharedAlbumViewModel: SharedAlbumViewModel {
+    var sharedAlbumViewModel: SharedAlbumVM {
         get { self[SharedAlbumViewModelKey.self] }
         set { self[SharedAlbumViewModelKey.self] = newValue }
     }

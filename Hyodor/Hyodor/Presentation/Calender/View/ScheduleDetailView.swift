@@ -28,11 +28,9 @@ struct ScheduleDetailView: View {
 
     var body: some View {
             ZStack(alignment: .bottom) {
-                // 메인 콘텐츠
                 ScrollView {
                     VStack(spacing: 0) {
-                        // 🔥 토스 스타일 헤더 카드
-                        TossDetailHeaderCard(
+                        ASDetailHeaderCard(
                             title: schedule.title,
                             date: schedule.date,
                             dateFormatter: dateFormatter,
@@ -41,20 +39,17 @@ struct ScheduleDetailView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
 
-                        // 🔥 메모 섹션 (있을 경우만)
                         if let notes = schedule.notes, !notes.isEmpty {
-                            TossDetailNotesCard(notes: notes)
+                            ASDetailNotesCard(notes: notes)
                                 .padding(.horizontal, 20)
                                 .padding(.top, 16)
                         }
 
-                        // 🔥 하단 여백 (버튼 공간 확보)
                         Spacer(minLength: 120)
                     }
                 }
 
-                // 🔥 하단 고정 삭제 버튼
-                TossDeleteButton(
+                ASDeleteButton(
                     onDelete: {
                         showingDeleteAlert = true
                     }
@@ -76,7 +71,7 @@ struct ScheduleDetailView: View {
     }
 }
 
-struct TossDetailHeaderCard: View {
+struct ASDetailHeaderCard: View {
     let title: String
     let date: Date
     let dateFormatter: DateFormatter
@@ -146,7 +141,7 @@ struct TossDetailHeaderCard: View {
     }
 }
 
-struct TossDetailNotesCard: View {
+struct ASDetailNotesCard: View {
     let notes: String
 
     var body: some View {
@@ -172,7 +167,7 @@ struct TossDetailNotesCard: View {
     }
 }
 
-struct TossDeleteButton: View {
+struct ASDeleteButton: View {
     let onDelete: () -> Void
 
     var body: some View {

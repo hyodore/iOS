@@ -10,7 +10,6 @@ import Photos
 
 @Observable
 class PhotoListVM {
-    // Use Cases 및 Repository 의존성 주입
     private let photoRepository: PhotoRepository
     private let galleryRepository: GalleryRepository
 
@@ -33,7 +32,6 @@ class PhotoListVM {
         photoAssets.contains(where: { $0.isSelected })
     }
 
-    // MARK: - 사진첩 접근 권한 요청
     func requestPhotoLibraryAccess() {
         PHPhotoLibrary.requestAuthorization { [weak self] status in
             DispatchQueue.main.async {
@@ -49,7 +47,6 @@ class PhotoListVM {
         }
     }
 
-    // MARK: - 사진 가져오기
     private func fetchPhotos() {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -66,7 +63,6 @@ class PhotoListVM {
         }
     }
 
-    // MARK: - 사진 탭 처리
     func handleTap(assetId: String) {
         guard let index = photoAssets.firstIndex(where: { $0.id == assetId }) else { return }
         if photoAssets[index].isUploaded || photoRepository.isPhotoUploaded(assetId: assetId) {
@@ -76,7 +72,6 @@ class PhotoListVM {
         }
     }
 
-    // MARK: - 선택된 사진 업로드
     func uploadSelectedPhotos(onComplete: ((SyncResponseDTO) -> Void)? = nil) async {
         guard hasSelectedPhotos, !isUploading else { return }
         isUploading = true
@@ -89,7 +84,6 @@ class PhotoListVM {
             var imageInfos: [ImageUploadRequestDTO] = []
             var assetIds: [String] = []
 
-            // TaskGroup으로 병렬 변환
             try await withThrowingTaskGroup(of: (UIImage, ImageUploadRequestDTO, String).self) { group in
                 for asset in selectedAssets {
                     group.addTask {
@@ -112,10 +106,8 @@ class PhotoListVM {
                 }
             }
 
-            // Presigned URL 요청
             let presignedURLs = try await galleryRepository.requestPresignedURLs(imageInfos: imageInfos)
 
-            // S3 업로드 (병렬 처리)
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for (index, presignedURL) in presignedURLs.enumerated() where index < images.count {
                     group.addTask {
@@ -125,7 +117,6 @@ class PhotoListVM {
                 try await group.waitForAll()
             }
 
-            // 업로드 완료 알림
             let now = ISO8601DateFormatter().string(from: Date())
             let uploadedInfos = presignedURLs.enumerated().map { (index, presignedURL) in
                 UploadedPhotoInfoDTO(
@@ -136,7 +127,6 @@ class PhotoListVM {
             }
             let response = try await galleryRepository.notifyUploadComplete(userId: APIConstants.userId, uploadedPhotos: uploadedInfos)
 
-            // 상태 및 로컬 정보 갱신
             let uploadedPhotoIds = Set(response.newPhoto.map { $0.photoId })
             for (index, assetId) in assetIds.enumerated() {
                 if index < presignedURLs.count,
@@ -162,7 +152,6 @@ class PhotoListVM {
         isUploading = false
     }
 
-    // MARK: - PHAsset → UIImage 비동기 변환 (최적화)
     private func requestUIImage(from asset: PHAsset) async -> UIImage? {
         let targetSize = CGSize(width: 1920, height: 1080)
         let options = PHImageRequestOptions()
@@ -190,7 +179,6 @@ class PhotoListVM {
         }
     }
 
-    // MARK: - 이미지 파일 확장자 결정
     private func getImageFileExtension(from asset: PHAsset) -> String {
         if let uti = asset.value(forKey: "uniformTypeIdentifier") as? String {
             if uti == "public.png" { return "png" }
