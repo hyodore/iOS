@@ -8,7 +8,7 @@
 import SwiftUI
 import Photos
 
-struct PhotoCell: View {
+struct LocalPhotoCell: View {
     let asset: PHAsset
     let isSelected: Bool
     let isUploaded: Bool
