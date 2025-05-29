@@ -11,7 +11,6 @@ struct HomeView: View {
     @Bindable var viewModel: HomeVM
     @State var coordinator: HomeCoordinator
     @State private var animateOnAppear: Bool = false
-    @State private var refreshTrigger = false
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
@@ -41,20 +40,13 @@ struct HomeView: View {
                 destinationView(for: route)
             }
             .onAppear {
-                viewModel.loadNotifications()
-
+                viewModel.getLatestNotifications()
                 withAnimation(.easeInOut(duration: 0.5)) {
                     animateOnAppear = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .newNotificationReceived)) { _ in
-                refreshTrigger.toggle()
-                viewModel.loadNotifications()
-            }
-            .onChange(of: refreshTrigger) {
-                DispatchQueue.main.async {
-                    viewModel.loadNotifications()
-                }
+                viewModel.getLatestNotifications()
             }
         }
     }
@@ -161,7 +153,7 @@ struct HomeView: View {
 
     private var alertRowsContainer: some View {
         VStack(spacing: 8) {
-            let latestNotifications = viewModel.getLatestNotifications()
+            let latestNotifications = viewModel.notifications
             ForEach(latestNotifications.indices, id: \.self) { idx in
                 let notification = latestNotifications[idx]
                 Button {
