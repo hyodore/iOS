@@ -11,31 +11,10 @@ struct HomeAlertRow: View {
     let icon: String
     let title: String
     let date: Date
-    var isEmoji: Bool = false
     var isRecent: Bool = false
 
-    private var dateString: String {
-        date.toKoreanDateString()
-    }
-
-    private var timeString: String {
-        date.toKoreanTimeString()
-    }
-
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            if isEmoji {
-                Text("😶‍🌫️")
-                    .font(.system(size: 28))
-                    .frame(width: 40, height: 36)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
-                    .padding(.vertical, 2)
-            } else {
+        HStack{
                 Image(systemName: icon)
                     .resizable()
                     .scaledToFit()
@@ -49,10 +28,7 @@ struct HomeAlertRow: View {
                             .stroke(Color(.systemGray4), lineWidth: 1)
                     )
                     .padding(.vertical, 2)
-            }
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 6) {
                     Text(title)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.primary)
@@ -68,17 +44,18 @@ struct HomeAlertRow: View {
                             )
                             .foregroundColor(.blue)
                     }
-                }
-                Text(dateString)
+
+            Spacer()
+
+            VStack(alignment: .leading){
+                Text(date.toKoreanDateString())
                     .font(.caption2)
                     .foregroundColor(.gray)
+                Text(date.toKoreanTimeString())
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .frame(minWidth: 54, alignment: .trailing)
             }
-            Spacer()
-            
-            Text(timeString)
-                .font(.system(size: 16, weight: .light, design: .rounded))
-                .foregroundColor(.primary)
-                .frame(minWidth: 54, alignment: .trailing)
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
