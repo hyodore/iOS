@@ -11,7 +11,6 @@ import SwiftUI
 struct HyodorApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    let calendarVM = CalendarVM()
     let homeCoordinator = HomeCoordinator()
     let sharedAlbumViewModel = SharedAlbumVM()
 
@@ -21,7 +20,8 @@ struct HyodorApp: App {
         WindowGroup {
             if isActive {
                 HomeView(
-                    viewModel: HomeVM(coordinator: homeCoordinator, calendarVM: calendarVM),
+                    viewModel: HomeVM(
+                        coordinator: homeCoordinator),
                     coordinator: homeCoordinator
                 )
                 .environment(\.sharedAlbumViewModel, sharedAlbumViewModel)

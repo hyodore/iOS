@@ -9,8 +9,8 @@ import Foundation
 
 @Observable
 class HomeVM {
+    let calendarVM = CalendarVM()
     let coordinator: HomeCoordinator
-    let calendarVM: CalendarVM
     var notifications: [NotificationData] = []
     var selectedSchedule: Schedule? = nil
     var selectedDate: Date = Date()
@@ -26,7 +26,6 @@ class HomeVM {
 
     init(
         coordinator: HomeCoordinator,
-        calendarVM: CalendarVM = CalendarVM(),
         getDisplayedSchedulesUseCase: GetDisplayedSchedulesUseCase = GetDisplayedSchedulesUseCaseImpl(
             scheduleRepository: ScheduleRepositoryImpl()
         ),
@@ -40,7 +39,6 @@ class HomeVM {
         notificationRepository: NotificationRepository = NotificationRepositoryImpl()
     ) {
         self.coordinator = coordinator
-        self.calendarVM = calendarVM
         self.getDisplayedSchedulesUseCase = getDisplayedSchedulesUseCase
         self.getLatestNotificationsUseCase = getLatestNotificationsUseCase
         self.deleteScheduleUseCase = deleteScheduleUseCase
