@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Alamofire
 
 protocol ScheduleNetworkService {
     func uploadSchedule(_ schedule: Schedule, audioFileURL: URL?) async throws
@@ -13,16 +14,18 @@ protocol ScheduleNetworkService {
 }
 
 class ScheduleNetworkServiceImpl: ScheduleNetworkService {
+    private let session: Session
+
+    init() {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 60
+        configuration.timeoutIntervalForResource = 300
+
+        self.session = Session(configuration: configuration)
+    }
+
     func uploadSchedule(_ schedule: Schedule, audioFileURL: URL? = nil) async throws {
-
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.scheduleUpload) else {
-            throw URLError(.badURL)
-        }
-
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        let url = APIConstants.baseURL + APIConstants.Endpoints.scheduleUpload
 
         let outputFormatter = DateFormatter()
         outputFormatter.timeZone = TimeZone(identifier: "Asia/Seoul")
@@ -38,64 +41,75 @@ class ScheduleNetworkServiceImpl: ScheduleNetworkService {
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: scheduleData, options: []) else {
-            throw URLError(.cannotParseResponse)
+            throw ScheduleNetworkError.dataEncodingFailed
         }
 
-        var body = Data()
+        _ = try await session.upload(
+            multipartFormData: { formData in
+                formData.append(
+                    jsonData,
+                    withName: "data",
+                    mimeType: "application/json"
+                )
 
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"data\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: application/json\r\n\r\n".data(using: .utf8)!)
-        body.append(jsonData)
-        body.append("\r\n".data(using: .utf8)!)
-
-        if let audioURL = audioFileURL {
-            let filename = audioURL.lastPathComponent
-            do {
-                let fileData = try Data(contentsOf: audioURL)
-                body.append("--\(boundary)\r\n".data(using: .utf8)!)
-                body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-                body.append("Content-Type: audio/mp4\r\n\r\n".data(using: .utf8)!)
-                body.append(fileData)
-                body.append("\r\n".data(using: .utf8)!)
-            } catch {
-                throw URLError(.cannotLoadFromNetwork)
-            }
-        } else {
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8)!)
-            body.append("\r\n".data(using: .utf8)!)
-        }
-
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-
+                if let audioURL = audioFileURL {
+                    formData.append(
+                        audioURL,
+                        withName: "file",
+                        fileName: audioURL.lastPathComponent,
+                        mimeType: "audio/mp4"
+                    )
+                } else {
+                    formData.append(
+                        Data(),
+                        withName: "file",
+                        fileName: "",
+                        mimeType: "application/octet-stream"
+                    )
+                }
+            },
+            to: url,
+            method: .post
+        )
+        .validate()
+        .serializingData(emptyResponseCodes: [200, 204])
+        .value
     }
 
     func deleteSchedule(_ scheduleId: UUID) async throws {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.scheduleDelete) else {
-            throw URLError(.badURL)
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-
+        let url = APIConstants.baseURL + APIConstants.Endpoints.scheduleDelete
         let body = ScheduleDeleteRequestDTO(scheduleId: scheduleId.uuidString)
-        let jsonData = try JSONEncoder().encode(body)
-        request.httpBody = jsonData
 
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
+        _ = try await session.request(
+            url,
+            method: .post,
+            parameters: body,
+            encoder: JSONParameterEncoder.default,
+            headers: [
+                "Content-Type": "application/json;charset=UTF-8"
+            ]
+        )
+        .validate()
+        .serializingData(emptyResponseCodes: [200, 204])
+        .value
+    }
+}
+
+// MARK: - Custom Errors
+
+enum ScheduleNetworkError: LocalizedError {
+    case dataEncodingFailed
+    case audioFileNotFound
+    case uploadFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .dataEncodingFailed:
+            return "일정 데이터 인코딩에 실패했습니다."
+        case .audioFileNotFound:
+            return "오디오 파일을 찾을 수 없습니다."
+        case .uploadFailed(let message):
+            return "일정 업로드 실패: \(message)"
         }
     }
 }

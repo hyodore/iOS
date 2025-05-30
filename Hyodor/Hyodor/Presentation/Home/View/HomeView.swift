@@ -104,7 +104,7 @@ struct HomeView: View {
     @ViewBuilder
     private func scheduleButtonFor(index: Int) -> some View {
         let event = viewModel.displayedEvents[index]
-        let scheduleStatus = viewModel.getScheduleStatus(for: event)
+        let isToday = viewModel.isToday(for: event)
 
         Button {
             viewModel.didSelectSchedule(event)
@@ -112,7 +112,7 @@ struct HomeView: View {
             HomeScheduleRow(
                 title: event.title,
                 date: event.date,
-                isToday: scheduleStatus.isToday
+                isToday: isToday
             )
         }
         .buttonStyle(.plain)
