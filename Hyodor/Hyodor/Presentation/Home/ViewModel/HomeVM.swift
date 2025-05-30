@@ -9,8 +9,9 @@ import Foundation
 
 @Observable
 class HomeVM {
-    let calendarVM = CalendarVM()
     let coordinator: HomeCoordinator
+    let calendarVM = CalendarVM()
+
     var notifications: [NotificationData] = []
     var selectedSchedule: Schedule? = nil
     var selectedDate: Date = Date()
@@ -19,6 +20,7 @@ class HomeVM {
     private let getLatestNotificationsUseCase: GetLatestNotificationsUseCase
     private let deleteScheduleUseCase: DeleteScheduleUseCase
     private let notificationRepository: NotificationRepository
+    private let getScheduleStatusUseCase: GetScheduleStatusUseCase
 
     var displayedEvents: [Schedule] {
         return getDisplayedSchedulesUseCase.execute()
@@ -36,13 +38,15 @@ class HomeVM {
             scheduleRepository: ScheduleRepositoryImpl(),
             scheduleNetworkService: ScheduleNetworkServiceImpl()
         ),
-        notificationRepository: NotificationRepository = NotificationRepositoryImpl()
+        notificationRepository: NotificationRepository = NotificationRepositoryImpl(),
+        getScheduleStatusUseCase: GetScheduleStatusUseCase = GetScheduleStatusUseCaseImpl()
     ) {
         self.coordinator = coordinator
         self.getDisplayedSchedulesUseCase = getDisplayedSchedulesUseCase
         self.getLatestNotificationsUseCase = getLatestNotificationsUseCase
         self.deleteScheduleUseCase = deleteScheduleUseCase
         self.notificationRepository = notificationRepository
+        self.getScheduleStatusUseCase = getScheduleStatusUseCase
     }
 
     func didTapCalendar() {
@@ -73,20 +77,9 @@ class HomeVM {
         notifications = getLatestNotificationsUseCase.execute()
     }
 
-    func getScheduleStatus(for event: Schedule) -> (isPast: Bool, isToday: Bool) {
-        let calendar = Calendar.current
-        let now = Date()
-        let isToday = calendar.isDate(event.date, inSameDayAs: now)
-        let isPast: Bool = {
-            if isToday {
-                return event.date < now
-            } else {
-                return event.date < calendar.startOfDay(for: now)
-            }
-        }()
-
-        return (isPast: isPast, isToday: isToday)
-    }
+    func isToday(for event: Schedule) -> Bool {
+           return getScheduleStatusUseCase.execute(for: event)
+       }
 
     func deleteSchedule(_ schedule: Schedule) async {
         do {

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Alamofire
 
 protocol SharedPhotoNetworkService {
     func getAllPhotos(userId: String) async throws -> AllSyncResponseDTO
@@ -13,48 +14,67 @@ protocol SharedPhotoNetworkService {
 }
 
 class SharedPhotoNetworkServiceImpl: SharedPhotoNetworkService {
+    private let session: Session
+
+    init() {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 60
+
+        self.session = Session(configuration: configuration)
+    }
+
     func getAllPhotos(userId: String) async throws -> AllSyncResponseDTO {
-        guard var components = URLComponents(string: APIConstants.baseURL + APIConstants.Endpoints.galleryAll) else {
-            throw URLError(.badURL)
-        }
-        components.queryItems = [URLQueryItem(name: "userId", value: userId)]
-        guard let url = components.url else {
-            throw URLError(.badURL)
-        }
+        let url = APIConstants.baseURL + APIConstants.Endpoints.galleryAll
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-
-        return try JSONDecoder().decode(AllSyncResponseDTO.self, from: data)
+        return try await session.request(
+            url,
+            method: .get,
+            parameters: ["userId": userId],
+            headers: [
+                "Accept": "application/json"
+            ]
+        )
+        .validate()
+        .serializingDecodable(AllSyncResponseDTO.self)
+        .value
     }
 
     func deletePhotos(userId: String, photoIds: [String]) async throws {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryDelete) else {
-            throw URLError(.badURL)
-        }
+        let url = APIConstants.baseURL + APIConstants.Endpoints.galleryDelete
 
-        let body = [
-            "userId": userId,
-            "photoIds": photoIds
-        ] as [String : Any]
+        let requestBody = PhotoDeleteRequestDTO(userId: userId, photoIds: photoIds)
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        _ = try await session.request(
+            url,
+            method: .post,
+            parameters: requestBody,
+            encoder: JSONParameterEncoder.default,
+            headers: [
+                "Content-Type": "application/json;charset=UTF-8"
+            ]
+        )
+        .validate()
+        .serializingData(emptyResponseCodes: [200, 204])
+        .value
+    }
+}
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+// MARK: - Custom Errors
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
+enum SharedPhotoNetworkError: LocalizedError {
+    case invalidUserId
+    case photoNotFound
+    case deletionFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidUserId:
+            return "유효하지 않은 사용자 ID입니다."
+        case .photoNotFound:
+            return "삭제할 사진을 찾을 수 없습니다."
+        case .deletionFailed(let message):
+            return "사진 삭제 실패: \(message)"
         }
     }
 }

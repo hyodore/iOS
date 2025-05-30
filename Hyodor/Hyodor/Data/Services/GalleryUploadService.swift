@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Alamofire
 
 protocol GalleryUploadServiceProtocol {
     func requestPresignedURLs(imageInfos: [ImageUploadRequestDTO]) async throws -> [PresignedURLResponseDTO]
@@ -15,86 +16,114 @@ protocol GalleryUploadServiceProtocol {
 }
 
 class GalleryUploadService: GalleryUploadServiceProtocol {
+    private let session: Session
+
+    init() {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 120
+
+        self.session = Session(configuration: configuration)
+    }
 
     func requestPresignedURLs(imageInfos: [ImageUploadRequestDTO]) async throws -> [PresignedURLResponseDTO] {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryUploadInit) else {
-            throw URLError(.badURL)
-        }
+        let url = APIConstants.baseURL + APIConstants.Endpoints.galleryUploadInit
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        let jsonData = try JSONEncoder().encode(imageInfos)
-        request.httpBody = jsonData
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-
-        let presignedURLs = try JSONDecoder().decode([PresignedURLResponseDTO].self, from: data)
-        return presignedURLs
+        return try await session.request(
+            url,
+            method: .post,
+            parameters: imageInfos,
+            encoder: JSONParameterEncoder.default,
+            headers: [
+                "Content-Type": "application/json;charset=UTF-8"
+            ]
+        )
+        .validate()
+        .serializingDecodable([PresignedURLResponseDTO].self)
+        .value
     }
 
     func uploadImageToS3(image: UIImage, presignedURL: PresignedURLResponseDTO) async throws {
         guard let uploadURL = URL(string: presignedURL.uploadUrl) else {
-            throw URLError(.badURL)
+            throw AFError.invalidURL(url: presignedURL.uploadUrl)
         }
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "PUT"
+
         let contentType = presignedURL.uploadUrl.contains(".png") ? "image/png" : "image/jpeg"
-        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
-        let imageData: Data?
+        let imageData: Data
+
         if contentType == "image/png" {
-            imageData = image.pngData()
+            guard let data = image.pngData() else {
+                throw GalleryUploadError.imageEncodingFailed
+            }
+            imageData = data
         } else {
-            imageData = image.jpegData(compressionQuality: 0.9)
+            guard let data = image.jpegData(compressionQuality: 0.9) else {
+                throw GalleryUploadError.imageEncodingFailed
+            }
+            imageData = data
         }
-        guard let data = imageData else {
-            throw NSError(domain: "ImageEncoding", code: -1)
-        }
-        let (_, response) = try await URLSession.shared.upload(for: request, from: data)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+
+        _ = try await session.upload(
+            imageData,
+            to: uploadURL,
+            method: .put,
+            headers: ["Content-Type": contentType]
+        )
+        .validate()
+        .serializingData(emptyResponseCodes: [200, 204])
+        .value
     }
 
     func notifyUploadComplete(userId: String, uploadedPhotos: [UploadedPhotoInfoDTO]) async throws -> SyncResponseDTO {
-        guard let url = URL(string: APIConstants.baseURL + APIConstants.Endpoints.galleryUploadComplete) else {
-            throw URLError(.badURL)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
+        let url = APIConstants.baseURL + APIConstants.Endpoints.galleryUploadComplete
         let requestBody = UploadCompleteRequestDTO(userId: userId, photos: uploadedPhotos)
-        let jsonData = try JSONEncoder().encode(requestBody)
-        request.httpBody = jsonData
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-        let uploadCompleteResponse = try JSONDecoder().decode(SyncResponseDTO.self, from: data)
-        return uploadCompleteResponse
+        return try await session.request(
+            url,
+            method: .post,
+            parameters: requestBody,
+            encoder: JSONParameterEncoder.default,
+            headers: [
+                "Content-Type": "application/json;charset=UTF-8"
+            ]
+        )
+        .validate()
+        .serializingDecodable(SyncResponseDTO.self)
+        .value
     }
 
     func syncPhotos(userId: String) async throws -> SyncResponseDTO {
-        guard var components = URLComponents(string: APIConstants.baseURL + APIConstants.Endpoints.galleryAll) else {
-            throw URLError(.badURL)
+        let url = APIConstants.baseURL + APIConstants.Endpoints.galleryAll
+
+        return try await session.request(
+            url,
+            method: .get,
+            parameters: ["userId": userId],
+            headers: [
+                "Accept": "application/json"
+            ]
+        )
+        .validate()
+        .serializingDecodable(SyncResponseDTO.self)
+        .value
+    }
+}
+
+// MARK: - Custom Errors
+
+enum GalleryUploadError: LocalizedError {
+    case imageEncodingFailed
+    case invalidPresignedURL
+    case uploadFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .imageEncodingFailed:
+            return "이미지 인코딩에 실패했습니다."
+        case .invalidPresignedURL:
+            return "유효하지 않은 업로드 URL입니다."
+        case .uploadFailed(let message):
+            return "업로드 실패: \(message)"
         }
-        components.queryItems = [URLQueryItem(name: "userId", value: userId)]
-        guard let url = components.url else {
-            throw URLError(.badURL)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-        let syncResponse = try JSONDecoder().decode(SyncResponseDTO.self, from: data)
-        return syncResponse
     }
 }
