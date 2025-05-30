@@ -1,5 +1,5 @@
 //
-//  PhotoModels.swift
+//  PhotoAssetModel.swift
 //  Hyodor
 //
 //  Created by 김상준 on 4/23/25.

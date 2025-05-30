@@ -9,27 +9,27 @@ import SwiftUI
 import AVKit
 
 struct VideoPlayerView: View {
-    let videoUrl: String
-    @State private var player: AVPlayer?
-    @State private var isLoading = true
-    @State private var error: Error? = nil
+    @State private var viewModel: VideoPlayerViewModel
+
+    init(videoUrl: String) {
+        self._viewModel = State(initialValue: VideoPlayerViewModel(videoUrl: videoUrl))
+    }
 
     var body: some View {
         ZStack {
-            if let player = player {
+            if let player = viewModel.player {
                 VideoPlayer(player: player)
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
                     .ignoresSafeArea()
                     .onAppear {
-                        player.play()
-                        isLoading = false
+                        viewModel.playVideo()
                     }
                     .onDisappear {
-                        player.pause()
+                        viewModel.pauseVideo()
                     }
-            } else if isLoading {
+            } else if viewModel.isLoading {
                 ProgressView("영상 로딩 중...")
                     .scaleEffect(1.5)
                     .tint(.white)
@@ -62,18 +62,11 @@ struct VideoPlayerView: View {
         .navigationTitle("이벤트 영상")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            loadVideo()
+            viewModel.loadVideo()
         }
-    }
-
-    private func loadVideo() {
-        guard let url = URL(string: videoUrl),
-              videoUrl.lowercased().hasPrefix("http://") || videoUrl.lowercased().hasPrefix("https://") else {
-            isLoading = false
-            return
-        }
-
-        player = AVPlayer(url: url)
     }
 }
 
+#Preview {
+    VideoPlayerView(videoUrl: "https://example.com/video.mp4")
+}
