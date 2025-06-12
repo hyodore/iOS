@@ -21,7 +21,12 @@ struct SharedPhotoCell: View {
                     ProgressView()
                 }
             }
-            .retry(maxCount: 3, interval: .seconds(5)) 
+            .retry(maxCount: 3, interval: .seconds(5))
+            .setProcessor(
+                DownsamplingImageProcessor(size: CGSize(width: cellSize * UIScreen.main.scale, height: cellSize * UIScreen.main.scale))
+            )
+            .scaleFactor(UIScreen.main.scale)
+            .cacheOriginalImage(false)
             .resizable()
             .aspectRatio(contentMode: .fill)
             .frame(width: cellSize, height: cellSize)
