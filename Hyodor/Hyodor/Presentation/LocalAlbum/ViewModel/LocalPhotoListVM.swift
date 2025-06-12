@@ -41,6 +41,7 @@ class LocalPhotoListVM {
     ) {
         self.photoRepository = photoRepository
         self.photoUploadUseCase = photoUploadUseCase
+
     }
 
     var hasSelectedPhotos: Bool {
@@ -55,6 +56,7 @@ class LocalPhotoListVM {
                     self?.fetchPhotos()
                 case .denied, .restricted:
                     self?.activeAlert = .permission
+
                 default:
                     break
                 }
@@ -70,6 +72,7 @@ class LocalPhotoListVM {
         var assets: [PhotoAssetModel] = []
         fetchResult.enumerateObjects { asset, _, _ in
             let isUploaded = self.photoRepository.checkIsUploaded(assetId: asset.localIdentifier)
+
             assets.append(PhotoAssetModel(asset: asset, isSelected: false, isUploaded: isUploaded))
         }
 
@@ -83,6 +86,7 @@ class LocalPhotoListVM {
 
         if photoAssets[index].isUploaded {
             activeAlert = .duplicate
+
         } else {
             photoAssets[index].isSelected.toggle()
         }

@@ -150,6 +150,7 @@ struct HomeView: View {
     }
 
     // Alert UI
+
     private var alertSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -176,6 +177,7 @@ struct HomeView: View {
                         .opacity(animateOnAppear ? 1 : 0)
                         .animation(.easeInOut(duration: 0.4).delay(Double(idx) * 0.1), value: animateOnAppear)
                 } else {
+
                     emptyAlertRow()
                 }
             }
@@ -206,8 +208,6 @@ struct HomeView: View {
         )
         .opacity(0)
     }
-
-    // Coordinator
     @ViewBuilder
     private func destinationView(for route: HomeCoordinator.HomeRoute) -> some View {
         switch route {

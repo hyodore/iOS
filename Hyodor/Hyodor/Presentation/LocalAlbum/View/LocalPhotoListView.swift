@@ -40,6 +40,7 @@ struct LocalPhotoListView: View {
                 }
 
                 uploadButton
+
             }
             .navigationTitle("사진 선택")
             .onAppear {
@@ -131,5 +132,6 @@ struct UploadingOverlay: View {
                 .fill(Color.gray.opacity(0.8))
         )
         .shadow(radius: 10)
+
     }
 }

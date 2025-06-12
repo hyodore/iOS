@@ -27,6 +27,7 @@ struct LocalPhotoCell: View {
             // MARK: - Overlays
             if isUploaded {
                 Color.black.opacity(0.4)
+
             }
 
             if isSelected {
