@@ -27,10 +27,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         fcmManager.configure()
         fcmManager.setDelegate(self)
         UNUserNotificationCenter.current().delegate = self
+
         Task {
             await notificationService.requestAuthorization()
         }
-
         return true
     }
 

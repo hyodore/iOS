@@ -205,15 +205,3 @@ struct ASDeleteButton: View {
         }
     }
 }
-
-#Preview(body: {
-    ScheduleDetailView(
-        schedule: Schedule(
-            id: UUID(),
-            title: "팀 미팅",
-            date: Date(),
-            notes: "프로젝트 진행 상황 공유 및 다음 주 계획 논의"
-        ),
-        onDelete: {}
-    )
-})

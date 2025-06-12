@@ -7,26 +7,27 @@
 
 import SwiftUI
 
-class PhotoRepositoryImpl: PhotoRepository {
+class LocalPhotoRecordRepositoryImpl: LocalPhotoRecordRepository
+ {
     private let photoStorageService: PhotoStorageService
 
     init(photoStorageService: PhotoStorageService = PhotoStorageService()) {
         self.photoStorageService = photoStorageService
     }
 
-    func getAllUploadedPhotos() -> [UploadedLocalPhotoInfo] {
+    func fetchAllRecords() -> [UploadedLocalPhotoInfo] {
         return photoStorageService.getAllUploadedPhotos()
     }
 
-    func isPhotoUploaded(assetId: String) -> Bool {
+    func checkIsUploaded(assetId: String) -> Bool {
         return photoStorageService.isPhotoUploaded(assetId: assetId)
     }
 
-    func saveUploadedPhoto(_ photo: UploadedLocalPhotoInfo) {
+    func saveRecord(_ photo: UploadedLocalPhotoInfo) {
         photoStorageService.saveUploadedPhoto(photo)
     }
 
-    func removeUploadedPhoto(assetId: String) {
+    func removeRecord(assetId: String) {
         photoStorageService.removeUploadedPhoto(assetId: assetId)
     }
 }

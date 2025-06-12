@@ -22,7 +22,7 @@ class SharedAlbumVM {
         ),
         deletePhotosUseCase: DeletePhotosUseCase = DeletePhotosUseCaseImpl(
             sharedPhotoRepository: SharedPhotoRepositoryImpl(),
-            photoRepository: PhotoRepositoryImpl()
+            photoRepository: LocalPhotoRecordRepositoryImpl()
         )
     ) {
         self.getAllPhotosUseCase = getAllPhotosUseCase

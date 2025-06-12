@@ -5,6 +5,8 @@
 //  Created by 김상준 on 5/27/25.
 //
 
+import Foundation
+
 protocol GetSchedulesUseCase {
     func execute() -> [Schedule]
 }
