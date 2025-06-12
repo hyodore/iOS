@@ -5,33 +5,24 @@
 //  Created by 김상준 on 4/25/25.
 //
 import SwiftUI
+import Kingfisher
 
 struct SharedPhotoDetailView: View {
-    @State private var viewModel : SharedPhotoDetailVM
-
-    init(photo: SharedPhoto){
-        _viewModel = State(wrappedValue: SharedPhotoDetailVM(photo: photo))
-    }
-
+    let photo: SharedPhoto 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            if let image = viewModel.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(2)
-            }
+
+            KFImage(photo.imageURL)
+                .placeholder {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(2)
+                }
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            Task{
-                await viewModel.loadImage()
-            }
-            }
     }
 }
