@@ -6,38 +6,26 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct SharedPhotoCell: View {
-    @State private var viewModel: SharedPhotoCellVM
+    let photo: SharedPhoto
     private var cellSize: CGFloat { UIScreen.main.bounds.width / 3 }
 
-    init(photo: SharedPhoto) {
-        _viewModel = State(wrappedValue: SharedPhotoCellVM(photo: photo))
-    }
-
     var body: some View {
-        ZStack {
-            if let image = viewModel.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: cellSize, height: cellSize)
-                    .clipped()
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: cellSize, height: cellSize)
-                if viewModel.isLoading {
+        KFImage(photo.imageURL)
+            .placeholder {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
                     ProgressView()
-                } else {
-                    Image(systemName: "photo")
-                        .font(.system(size: 30))
-                        .foregroundColor(.gray)
                 }
             }
-        }
-        .frame(width: cellSize, height: cellSize)
-        .background(Color.clear)
-        .contentShape(Rectangle())
+            .retry(maxCount: 3, interval: .seconds(5)) 
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: cellSize, height: cellSize)
+            .clipped()
+            .contentShape(Rectangle())
     }
 }
