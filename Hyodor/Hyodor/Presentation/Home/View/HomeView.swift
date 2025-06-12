@@ -51,6 +51,7 @@ struct HomeView: View {
         }
     }
 
+    // Header UI
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
@@ -73,6 +74,7 @@ struct HomeView: View {
         }
     }
 
+    // Content UI
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: 24) {
             scheduleSection
@@ -81,32 +83,31 @@ struct HomeView: View {
         .padding(.horizontal, 20)
     }
 
+    // Scheduler UI
     private var scheduleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "부모님 일정")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
 
-            VStack(spacing: 8) {
-                ForEach(0..<4) { idx in
-                    if idx < viewModel.displayedEvents.count {
-                        scheduleButtonFor(index: idx)
-                            .offset(y: animateOnAppear ? 0 : 20)
-                            .opacity(animateOnAppear ? 1 : 0)
-                            .animation(.easeInOut(duration: 0.4).delay(Double(idx) * 0.1), value: animateOnAppear)
-                    } else {
-                        emptyScheduleRow()
-                    }
+            ForEach(0..<4) { idx in
+                if idx < viewModel.displayedEvents.count {
+                    HomeScheduleRowBtn(index: idx)
+                        .offset(y: animateOnAppear ? 0 : 20)
+                        .opacity(animateOnAppear ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.4).delay(Double(idx) * 0.1), value: animateOnAppear)
+                } else {
+                    emptyScheduleRow()
                 }
             }
         }
+
     }
 
-    @ViewBuilder
-    private func scheduleButtonFor(index: Int) -> some View {
+    private func HomeScheduleRowBtn(index: Int) -> some View {
         let event = viewModel.displayedEvents[index]
         let isToday = viewModel.isToday(for: event)
 
-        Button {
+        return Button {
             viewModel.didSelectSchedule(event)
         } label: {
             HomeScheduleRow(
@@ -123,66 +124,6 @@ struct HomeView: View {
             title: "",
             date: Date(),
             isToday: false
-        )
-        .opacity(0)
-    }
-
-    private var alertSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                SectionHeader(title: "이상현상 리스트")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                Spacer()
-                Button("전체 보기") {
-                    viewModel.didTapAlert()
-                }
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundColor(.blue)
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.blue.opacity(0.1))
-                )
-            }
-            alertRowsContainer
-        }
-    }
-
-    private var alertRowsContainer: some View {
-        VStack(spacing: 8) {
-            let latestNotifications = viewModel.notifications
-            
-            ForEach(latestNotifications.indices, id: \.self) { idx in
-                let notification = latestNotifications[idx]
-                Button {
-                    viewModel.didSelectNotification(notification)
-                } label: {
-                    HomeAlertRow(
-                        icon: "shield.lefthalf.fill",
-                        title: notification.title,
-                        date: notification.receivedDate,
-                        isRecent: idx == 0
-                    )
-                }
-                .buttonStyle(.plain)
-                .offset(y: animateOnAppear ? 0 : 20)
-                .opacity(animateOnAppear ? 1 : 0)
-                .animation(.easeInOut(duration: 0.4).delay(Double(idx + 4) * 0.1), value: animateOnAppear)
-            }
-            if latestNotifications.count < 4 {
-                ForEach(latestNotifications.count..<4, id: \.self) { _ in
-                    emptyAlertRow()
-                }
-            }
-        }
-    }
-
-    private func emptyAlertRow() -> some View {
-        HomeAlertRow(
-            icon: "shield.lefthalf.fill",
-            title: "",
-            date: Date()
         )
         .opacity(0)
     }
@@ -205,10 +146,68 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("일정 상세")
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
+    // Alert UI
+
+    private var alertSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader(title: "이상현상 리스트")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                Spacer()
+                Button("전체 보기") {
+                    viewModel.didTapAlert()
+                }
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(.blue)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.1))
+                )
+            }
+
+            ForEach(0..<4) { idx in
+                if idx < viewModel.notifications.count {
+                   HomeAlertRowBtn(idx: idx)
+                        .offset(y: animateOnAppear ? 0 : 20)
+                        .opacity(animateOnAppear ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.4).delay(Double(idx) * 0.1), value: animateOnAppear)
+                } else {
+
+                    emptyAlertRow()
+                }
+            }
+        }
+    }
+
+    private func HomeAlertRowBtn(idx: Int) -> some View {
+        let notification = viewModel.notifications[idx]
+
+        return Button {
+            viewModel.didSelectNotification(notification)
+        } label: {
+            HomeAlertRow(
+                icon: "shield.lefthalf.fill",
+                title: notification.title,
+                date: notification.receivedDate,
+                isRecent: idx == 0
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func emptyAlertRow() -> some View {
+        HomeAlertRow(
+            icon: "shield.lefthalf.fill",
+            title: "",
+            date: Date()
+        )
+        .opacity(0)
+    }
     @ViewBuilder
     private func destinationView(for route: HomeCoordinator.HomeRoute) -> some View {
         switch route {

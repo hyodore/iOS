@@ -13,11 +13,13 @@ protocol DeletePhotosUseCase {
 
 class DeletePhotosUseCaseImpl: DeletePhotosUseCase {
     private let sharedPhotoRepository: SharedPhotoRepository
-    private let photoRepository: PhotoRepository
+    private let photoRepository: LocalPhotoRecordRepository
+
 
     init(
         sharedPhotoRepository: SharedPhotoRepository,
-        photoRepository: PhotoRepository
+        photoRepository: LocalPhotoRecordRepository
+
     ) {
         self.sharedPhotoRepository = sharedPhotoRepository
         self.photoRepository = photoRepository
@@ -26,13 +28,13 @@ class DeletePhotosUseCaseImpl: DeletePhotosUseCase {
     func execute(userId: String, photoIds: [String]) async throws {
         try await sharedPhotoRepository.deletePhotos(userId: userId, photoIds: photoIds)
 
-        let uploadedPhotos = photoRepository.getAllUploadedPhotos()
+        let uploadedPhotos = photoRepository.fetchAllRecords()
         let toRemoveAssetIds = uploadedPhotos
             .filter { photoIds.contains($0.photoId) }
             .map { $0.id }
 
         for assetId in toRemoveAssetIds {
-            photoRepository.removeUploadedPhoto(assetId: assetId)
+            photoRepository.removeRecord(assetId: assetId)
         }
     }
 }
