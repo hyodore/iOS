@@ -4,7 +4,7 @@
 |:--:|:--|
 |로고|<img width="70" alt="" src="https://github.com/user-attachments/assets/2a23f3a6-14d9-4fbb-8ce1-304a1c8b5032"> |
 |기간|2025. 03 ~ 2025. 06|
-|수상|인하대 컴퓨터공학 종합 설계 대상|
+|수상|인하대 컴퓨터공학 종합 설계 우수상|
 |참여 인원|3명(iOS 개발 1명 + BE 1명 + AI/Embeded 1명)|
 |기술 스택|SwiftUI, Alamofire, FCM, AVKit, Photos, ImageCache, AWS S3|
 |아키텍처|MVVM+C, 클린 아키텍처|
